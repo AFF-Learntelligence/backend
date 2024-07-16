@@ -82,3 +82,39 @@ export async function updateEmailPassUser(request, h) {
       .code(500);
   }
 }
+
+export async function getUserProfile(request, h) {
+  try {
+    const { uid } = request.auth;
+
+    const docRef = doc(db, "Users", uid);
+    const docSnapshot = await getDoc(docRef);
+
+    if (docSnapshot.exists()) {
+      const userData = docSnapshot.data();
+
+      return h
+        .response({
+          status: 200,
+          message: "User profile retrieved successfully",
+          data: userData,
+        })
+        .code(200);
+    } else {
+      return h
+        .response({
+          status: 404,
+          message: "User profile does not exist",
+        })
+        .code(404);
+    }
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while retrieving user profile.",
+      })
+      .code(500);
+  }
+}
