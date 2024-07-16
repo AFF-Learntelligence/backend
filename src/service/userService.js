@@ -29,7 +29,12 @@ export const userService = {
   async getUserProfile(uid) {
     const docRef = doc(db, "Users", uid);
     const docSnapshot = await getDoc(docRef);
-    return docSnapshot.exists ? docSnapshot.data() : null;
+
+    if (docSnapshot.exists()) {
+      return docSnapshot.data();
+    } else {
+      return null;
+    }
   },
 
   async getUserCourses(uid) {

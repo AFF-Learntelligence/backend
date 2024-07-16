@@ -11,7 +11,6 @@ const {
   MESSAGING_SENDER_ID,
   APP_ID,
   MEASUREMENT_ID,
-  FIREBASE_SERVICE_ACCOUNT,
   TYPE,
   PRIVATE_KEY_ID,
   PRIVATE_KEY,
@@ -22,11 +21,13 @@ const {
   AUTH_PROVIDER_X509_CERT_URL,
   CLIENT_X509_CERT_URL,
   UNIVERSE_DOMAIN,
+  APP_URL,
 } = process.env;
 
 const config = {
   port: PORT,
   host: HOST,
+  appUrl: APP_URL,
   firebaseConfig: {
     apiKey: API_KEY,
     authDomain: AUTH_DOMAIN,

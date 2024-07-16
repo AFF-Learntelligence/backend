@@ -28,3 +28,43 @@ export async function createCircle(request, h) {
       .code(500);
   }
 }
+
+export async function joinCircle(request, h) {
+  try {
+    const { circleId } = request.params;
+    const { uid } = request.auth;
+
+    const result = await circleService.joinCircle(uid, circleId);
+
+    if (result === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Circle not found",
+        })
+        .code(404);
+    } else if (result === "already_member") {
+      return h
+        .response({
+          status: 200,
+          message: "You are already a member of this circle",
+        })
+        .code(200);
+    } else {
+      return h
+        .response({
+          status: 200,
+          message: "Joined circle successfully",
+        })
+        .code(200);
+    }
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while joining the circle.",
+      })
+      .code(500);
+  }
+}

@@ -86,9 +86,14 @@ export async function getUserProfile(request, h) {
 
     const userData = await userService.getUserProfile(uid);
 
-    if (userData) {
-      const userData = docSnapshot.data();
-
+    if (userData === null) {
+      return h
+        .response({
+          status: 404,
+          message: "User profile does not exist",
+        })
+        .code(404);
+    } else {
       return h
         .response({
           status: 200,
@@ -96,13 +101,6 @@ export async function getUserProfile(request, h) {
           data: userData,
         })
         .code(200);
-    } else {
-      return h
-        .response({
-          status: 404,
-          message: "User profile does not exist",
-        })
-        .code(404);
     }
   } catch (error) {
     console.log(error.message);
