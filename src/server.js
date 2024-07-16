@@ -2,6 +2,7 @@ import Hapi from "@hapi/hapi";
 import config from "./config/config.js";
 import registerAuthRoutes from "./routes/authRoute.js";
 import registerUserRoutes from "./routes/userRoute.js";
+import registerCircleRoutes from "./routes/circleRoute.js";
 
 (async () => {
   const server = Hapi.server({
@@ -16,6 +17,7 @@ import registerUserRoutes from "./routes/userRoute.js";
 
   registerAuthRoutes(server);
   registerUserRoutes(server);
+  registerCircleRoutes(server);
 
   try {
     await server.start();

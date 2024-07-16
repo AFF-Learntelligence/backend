@@ -1,7 +1,6 @@
-import { getAuth, updateEmail, updatePassword } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
-import { db } from "../config/firebaseConfig.js";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { userService } from "../service/userService.js";
 
 const auth = getAuth(firebaseApp);
 
@@ -10,13 +9,12 @@ export async function updateUserProfile(request, h) {
     const { name, phone } = request.payload;
 
     const { uid } = request.auth;
-    const updateData = {};
 
+    const updateData = {};
     if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
 
-    const docRef = doc(db, "Users", uid);
-    await updateDoc(docRef, updateData);
+    await userService.updateUserProfile(uid, updateData);
 
     return h
       .response({
@@ -45,14 +43,13 @@ export async function updateEmailPassUser(request, h) {
     const user = auth.currentUser;
 
     if (email) {
-      await updateEmail(user, email);
+      await userService.updateEmail(user, email);
 
       const { uid } = request.auth;
       const updateData = {
         email: email,
       };
-      const docRef = doc(db, "Users", uid);
-      await updateDoc(docRef, updateData);
+      await userService.updateUserProfile(uid, updateData);
 
       return h
         .response({
@@ -63,7 +60,7 @@ export async function updateEmailPassUser(request, h) {
     }
 
     if (password) {
-      await updatePassword(user, password);
+      await userService.updatePassword(user, password);
       return h
         .response({
           status: 200,
@@ -87,10 +84,9 @@ export async function getUserProfile(request, h) {
   try {
     const { uid } = request.auth;
 
-    const docRef = doc(db, "Users", uid);
-    const docSnapshot = await getDoc(docRef);
+    const userData = await userService.getUserProfile(uid);
 
-    if (docSnapshot.exists()) {
+    if (userData) {
       const userData = docSnapshot.data();
 
       return h
@@ -114,6 +110,39 @@ export async function getUserProfile(request, h) {
       .response({
         status: 500,
         message: "An error occurred while retrieving user profile.",
+      })
+      .code(500);
+  }
+}
+
+export async function getUserCourses(request, h) {
+  try {
+    const { uid } = request.auth;
+
+    const courses = await userService.getUserCourses(uid);
+
+    if (courses.length === 0) {
+      return h
+        .response({
+          status: 200,
+          message: "No courses found. Initialized courses collection.",
+          courses: [],
+        })
+        .code(200);
+    } else {
+      return h
+        .response({
+          status: 200,
+          courses: courses,
+        })
+        .code(200);
+    }
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while fetching courses.",
       })
       .code(500);
   }
