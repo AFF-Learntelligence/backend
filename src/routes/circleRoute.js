@@ -1,4 +1,8 @@
-import { createCircle, joinCircle } from "../controller/circleController.js";
+import {
+  createCircle,
+  getCircleDetails,
+  joinCircle,
+} from "../controller/circleController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
 export default function registerCircleRoutes(server) {
@@ -15,6 +19,14 @@ export default function registerCircleRoutes(server) {
       path: "/invite/{circleId}",
       method: "POST",
       handler: joinCircle,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/circle/{circleId}",
+      method: "GET",
+      handler: getCircleDetails,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

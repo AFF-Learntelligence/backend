@@ -38,6 +38,7 @@ export const circleService = {
 
     return invitationLink;
   },
+
   async joinCircle(userId, circleId) {
     const circleRef = doc(db, "Circles", circleId);
     const circleSnapshot = await getDoc(circleRef);
@@ -60,4 +61,82 @@ export const circleService = {
 
     return "joined";
   },
+
+  async getCircleDetails(circleId) {
+    const circleRef = doc(db, "Circles", circleId);
+    const circleSnapshot = await getDoc(circleRef);
+
+    if (!circleSnapshot.exists()) {
+      return null;
+    }
+
+    const circleData = circleSnapshot.data();
+
+    // Fetch members asynchronously using memberService
+    const membersPromise = getMembers(circleRef, circleData.creator.id);
+
+    // Fetch courses asynchronously using courseService
+    const coursesPromise = getCourses(circleRef);
+
+    // Wait for both promises to resolve
+    const [members, courses] = await Promise.all([
+      membersPromise,
+      coursesPromise,
+    ]);
+
+    return { ...circleData, members, courses };
+  },
 };
+
+async function getMembers(circleRef, creatorId) {
+  const membersCollectionRef = collection(circleRef, "Members");
+  const membersSnapshot = await getDocs(membersCollectionRef);
+  const members = [];
+
+  for (const memberDoc of membersSnapshot.docs) {
+    const memberData = memberDoc.data();
+    const userRef = memberData.userId;
+    const userDoc = await getDoc(userRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      let role = "User";
+
+      if (userDoc.id === creatorId) {
+        role = "Creator";
+        console.log(creatorId);
+      }
+
+      members.push({
+        memberId: userDoc.id,
+        name: userData.name,
+        role: role,
+      });
+    }
+  }
+
+  return members;
+}
+
+async function getCourses(circleRef) {
+  const coursesCollectionRef = collection(circleRef, "Courses");
+  const coursesSnapshot = await getDocs(coursesCollectionRef);
+  const courses = [];
+
+  for (const courseDoc of coursesSnapshot.docs) {
+    const courseId = courseDoc.id;
+    const courseData = courseDoc.data();
+    const courseRef = courseData.courseId;
+    const courseDoc = await getDoc(courseRef);
+
+    if (courseDoc.exists()) {
+      const courseData = courseDoc.data();
+      courses.push({
+        courseId: courseId,
+        courseData: courseDoc.id,
+      });
+    }
+  }
+
+  return courses;
+}

@@ -68,3 +68,39 @@ export async function joinCircle(request, h) {
       .code(500);
   }
 }
+
+export async function getCircleDetails(request, h) {
+  try {
+    const { circleId } = request.params;
+    const data = await circleService.getCircleDetails(circleId);
+
+    if (data === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Circle not found",
+        })
+        .code(404);
+    }
+
+    return h
+      .response({
+        status: 200,
+        message: "Circle details retrieved successfully.",
+        data: {
+          ...data.circleData,
+          members: data.members,
+          courses: data.courses,
+        },
+      })
+      .code(200);
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while retrieving circle details.",
+      })
+      .code(500);
+  }
+}
