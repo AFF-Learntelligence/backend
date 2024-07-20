@@ -1,12 +1,34 @@
 import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
 import { circleService } from "../service/circleService.js";
+import { userService } from "../service/userService.js";
 
 const auth = getAuth(firebaseApp);
 
 export async function createCircle(request, h) {
   try {
     const { uid } = request.auth;
+
+    const user = await userService.getUserProfile(uid);
+
+    if (user == null) {
+      return h
+        .response({
+          status: 404,
+          message: "User not found",
+        })
+        .code(404);
+    }
+
+    // Check if the user's role is "creator"
+    if (user.role !== "creator") {
+      return h
+        .response({
+          status: 403,
+          message: "Unauthorized. Only creators can create a circle.",
+        })
+        .code(403);
+    }
 
     const { circleName, description } = request.payload;
     const circleData = { circleName, description };
