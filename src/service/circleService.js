@@ -104,7 +104,6 @@ async function getMembers(circleRef, creatorId) {
 
       if (userDoc.id === creatorId) {
         role = "Creator";
-        console.log(creatorId);
       }
 
       members.push({
