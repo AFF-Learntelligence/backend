@@ -1,15 +1,7 @@
 import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
 import { db } from "../config/firebaseConfig.js";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  setDoc,
-  addDoc,
-} from "firebase/firestore";
+import { collection, doc, setDoc, addDoc } from "firebase/firestore";
 
 const auth = getAuth(firebaseApp);
 
