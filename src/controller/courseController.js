@@ -1,11 +1,11 @@
 import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
-import { circleService } from "../service/circleService.js";
 import { userService } from "../service/userService.js";
+import { courseService } from "../service/courceService.js";
 
 const auth = getAuth(firebaseApp);
 
-export async function createCircle(request, h) {
+export async function createCourse(request, h) {
   try {
     const { uid } = request.auth;
 
@@ -25,13 +25,15 @@ export async function createCircle(request, h) {
       return h
         .response({
           status: 403,
-          message: "Unauthorized. Only creators can create a circle.",
+          message: "Unauthorized. Only creators can create a course.",
         })
         .code(403);
     }
 
-    const { circleName, description } = request.payload;
-    if (!circleName || !description) {
+    const { courseName, description, learnerProfile, content } =
+      request.payload;
+
+    if (!courseName || !description || !learnerProfile || !content) {
       return h
         .response({
           status: 400,
@@ -40,13 +42,15 @@ export async function createCircle(request, h) {
         .code(400);
     }
 
-    const circleData = { circleName, description };
+    const courseData = { courseName, description, learnerProfile, content };
+
+    const courseId = await courseService.createCourse(courseData);
 
     return h
       .response({
         status: 201,
-        message: "Circle created successfully",
-        invitationLink: await circleService.createCircle(uid, circleData),
+        message: "Course created successfully",
+        courseId: courseId,
       })
       .code(201);
   } catch (error) {
@@ -54,7 +58,7 @@ export async function createCircle(request, h) {
     return h
       .response({
         status: 500,
-        message: "An error occurred while creating the circle.",
+        message: "An error occurred while creating the course.",
       })
       .code(500);
   }
@@ -95,42 +99,6 @@ export async function joinCircle(request, h) {
       .response({
         status: 500,
         message: "An error occurred while joining the circle.",
-      })
-      .code(500);
-  }
-}
-
-export async function getCircleDetails(request, h) {
-  try {
-    const { circleId } = request.params;
-    const data = await circleService.getCircleDetails(circleId);
-
-    if (data === null) {
-      return h
-        .response({
-          status: 404,
-          message: "Circle not found",
-        })
-        .code(404);
-    }
-
-    return h
-      .response({
-        status: 200,
-        message: "Circle details retrieved successfully.",
-        data: {
-          ...data.circleData,
-          members: data.members,
-          courses: data.courses,
-        },
-      })
-      .code(200);
-  } catch (error) {
-    console.log(error.message);
-    return h
-      .response({
-        status: 500,
-        message: "An error occurred while retrieving circle details.",
       })
       .code(500);
   }
