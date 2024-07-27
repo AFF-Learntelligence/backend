@@ -99,7 +99,8 @@ export async function createCourse(request, h) {
     return h
       .response({
         status: 201,
-        message: "Course created successfully",
+        message:
+          "Course created successfully. Please wait for our machine learning to generate your content.",
         courseId,
       })
       .code(201);
