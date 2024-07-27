@@ -90,10 +90,11 @@ export async function createCourse(request, h) {
         .code(400);
     }
 
+    const courseData = { name, description, content };
+
     const courseId = await courseService.createCourse({
-      name,
-      description,
-      content,
+      uid,
+      courseData,
     });
 
     return h

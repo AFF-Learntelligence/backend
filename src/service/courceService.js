@@ -7,13 +7,14 @@ import axios from "axios";
 
 const auth = getAuth(firebaseApp);
 
-async function saveInitialCourseData(courseData) {
+async function saveInitialCourseData(userId, courseData) {
   const { name, description } = courseData;
   const coursesRef = collection(db, "Courses");
   const courseDocRef = await addDoc(coursesRef, {
     name,
     description,
     onContentLoading: true,
+    creator: doc(db, "Users", userId),
   });
   return courseDocRef.id;
 }
@@ -75,8 +76,8 @@ async function addChoices(quizDocRef, choices) {
 }
 
 export const courseService = {
-  async createCourse(courseData) {
-    const courseId = await saveInitialCourseData(courseData);
+  async createCourse(userId, courseData) {
+    const courseId = await saveInitialCourseData(userId, courseData);
 
     fetchContent(courseData)
       .then((contentData) => saveContentToDb(courseId, contentData.content))
