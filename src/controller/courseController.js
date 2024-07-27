@@ -116,6 +116,37 @@ export async function createCourse(request, h) {
   }
 }
 
+export async function getCourseById(request, h) {
+  try {
+    const { courseId } = request.params;
+
+    const courseData = await courseService.getCourseById(courseId);
+
+    if (courseData === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Course not found",
+        })
+        .code(404);
+    }
+
+    return h.response({
+      status: 200,
+      message: "Course data retrieved successfully.",
+      data: courseData,
+    });
+  } catch (error) {
+    console.error(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while fetching the course.",
+      })
+      .code(500);
+  }
+}
+
 export async function generateChapter(request, h) {
   try {
     const { uid } = request.auth;
