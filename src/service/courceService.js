@@ -2,6 +2,8 @@ import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
 import { db } from "../config/firebaseConfig.js";
 import { collection, doc, setDoc, addDoc } from "firebase/firestore";
+import config from "../config/config.js";
+import axios from "axios";
 
 const auth = getAuth(firebaseApp);
 
@@ -22,7 +24,7 @@ async function addQuizzes(chapterDocRef, quizzes) {
     const quizDocRef = doc(quizCollectionRef);
     await setDoc(quizDocRef, {
       question: quiz.question,
-      correctAnswer: quiz.correctAnswer,
+      key: quiz.key,
     });
 
     await addChoices(quizDocRef, quiz.choices);
@@ -34,20 +36,19 @@ async function addChoices(quizDocRef, choices) {
   for (const choice of choices) {
     const choiceDocRef = doc(choicesCollectionRef, choice.letter);
     await setDoc(choiceDocRef, {
-      letter: choice.letter,
-      answer: choice.answer,
+      letter: letter,
+      answer: answer,
     });
   }
 }
 
 export const courseService = {
   async createCourse(courseData) {
-    const { courseName, description, learnerProfile, content } = courseData;
+    const { name, description, content } = courseData;
     const coursesRef = collection(db, "Courses");
     const courseDocRef = await addDoc(coursesRef, {
-      courseName,
+      name,
       description,
-      learnerProfile,
     });
 
     const contentCollectionRef = collection(courseDocRef, "content");
@@ -55,5 +56,21 @@ export const courseService = {
       await addChapter(contentCollectionRef, chapter);
     }
     return courseDocRef.id;
+  },
+
+  async generateChapter(chapterData) {
+    const { title, length } = chapterData;
+
+    try {
+      const response = await axios.post(config.generateChapterAPI, {
+        course_title: title,
+        course_length: length,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error generating chapters:", error);
+      throw new Error("Failed to generate chapters.");
+    }
   },
 };

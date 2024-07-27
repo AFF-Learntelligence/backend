@@ -22,12 +22,16 @@ const {
   CLIENT_X509_CERT_URL,
   UNIVERSE_DOMAIN,
   APP_URL,
+  CREATE_COURSE_API,
+  GENERATE_CHAPTERS_API,
 } = process.env;
 
 const config = {
   port: PORT,
   host: HOST,
   appUrl: APP_URL,
+  createCourseAPI: CREATE_COURSE_API,
+  generateChapterAPI: GENERATE_CHAPTERS_API,
   firebaseConfig: {
     apiKey: API_KEY,
     authDomain: AUTH_DOMAIN,

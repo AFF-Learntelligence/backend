@@ -13,6 +13,7 @@
   "description": "",
   "dependencies": {
     "@hapi/hapi": "^21.3.10",
+    "axios": "^1.7.2",
     "dotenv": "^16.4.5",
     "firebase": "^9.23.0",
     "firebase-admin": "^12.2.0",
