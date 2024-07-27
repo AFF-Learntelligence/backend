@@ -86,7 +86,7 @@ export async function createCourse(request, h) {
 
     if (!name || !description || !content) {
       return h
-        .response({ status: 400, message: "Missing required fields" })
+        .response({ status: 400, message: "Missing required fields!" })
         .code(400);
     }
 

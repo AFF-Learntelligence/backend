@@ -1,0 +1,66 @@
+name: AFF Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@main
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: "latest"
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      - name: Authenticate Docker to Google Container Registry
+        run: gcloud auth configure-docker asia-southeast2-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t asia-southeast2-docker.pkg.dev/aff-learntelligence/aff-learntelligence-be/aff-learntelligence-be:latest .
+          docker push asia-southeast2-docker.pkg.dev/aff-learntelligence/aff-learntelligence-be/aff-learntelligence-be:latest
+
+      - name: Create .env.yaml file
+        run: |
+          echo "HOST: \"${{ secrets.HOST }}\"" > .env.yaml
+          echo "APP_URL: \"${{ secrets.APP_URL }}\"" >> .env.yaml
+          echo "CREATE_COURSE_API: \"${{ secrets.CREATE_COURSE_API }}\"" >> .env.yaml
+          echo "GENERATE_CHAPTERS_API: \"${{ secrets.GENERATE_CHAPTERS_API }}\"" >> .env.yaml
+          echo "API_KEY: \"${{ secrets.API_KEY }}\"" >> .env.yaml
+          echo "AUTH_DOMAIN: \"${{ secrets.AUTH_DOMAIN }}\"" >> .env.yaml
+          echo "PROJECT_ID: \"${{ secrets.PROJECT_ID }}\"" >> .env.yaml
+          echo "STORAGE_BUCKET: \"${{ secrets.STORAGE_BUCKET }}\"" >> .env.yaml
+          echo "MESSAGING_SENDER_ID: \"${{ secrets.MESSAGING_SENDER_ID }}\"" >> .env.yaml
+          echo "APP_ID: \"${{ secrets.APP_ID }}\"" >> .env.yaml
+          echo "MEASUREMENT_ID: \"${{ secrets.MEASUREMENT_ID }}\"" >> .env.yaml
+          echo "TYPE: \"${{ secrets.TYPE }}\"" >> .env.yaml
+          echo "PRIVATE_KEY_ID: \"${{ secrets.PRIVATE_KEY_ID }}\"" >> .env.yaml
+          echo "PRIVATE_KEY: \"${{ secrets.PRIVATE_KEY }}\"" >> .env.yaml
+          echo "CLIENT_EMAIL: \"${{ secrets.CLIENT_EMAIL }}\"" >> .env.yaml
+          echo "CLIENT_ID: \"${{ secrets.CLIENT_ID }}\"" >> .env.yaml
+          echo "AUTH_URI: \"${{ secrets.AUTH_URI }}\"" >> .env.yaml
+          echo "TOKEN_URI: \"${{ secrets.TOKEN_URI }}\"" >> .env.yaml
+          echo "AUTH_PROVIDER_X509_CERT_URL: \"${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}\"" >> .env.yaml
+          echo "CLIENT_X509_CERT_URL: \"${{ secrets.CLIENT_X509_CERT_URL }}\"" >> .env.yaml
+          echo "UNIVERSE_DOMAIN: \"${{ secrets.UNIVERSE_DOMAIN }}\"" >> .env.yaml
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy aff-learntelligence-be \
+          --image asia-southeast2-docker.pkg.dev/aff-learntelligence/aff-learntelligence-be/aff-learntelligence-be:latest \
+          --platform managed \
+          --region asia-southeast2 \
+          --env-vars-file .env.yaml \
+          --port 3000
