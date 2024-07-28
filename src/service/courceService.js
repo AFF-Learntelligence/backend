@@ -54,20 +54,11 @@ export const courseService = {
 
     const courseData = courseSnapshot.data();
 
-    // Retrieve creator's name
-    const creatorRef = courseData.creator;
-    const creatorSnapshot = await getDoc(creatorRef);
-
-    if (creatorSnapshot.exists()) {
-      const creatorData = creatorSnapshot.data();
-      courseData.creator = creatorData.name;
-    } else {
-      courseData.creator = "Unknown";
-    }
-
     courseData.content = await getCourseContent(courseRef);
 
-    return courseData;
+    const { creator, ...courseWithoutCreator } = courseData;
+
+    return courseWithoutCreator;
   },
 
   async getCourseByCreator(userId) {
