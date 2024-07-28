@@ -5,64 +5,6 @@ import { courseService } from "../service/courceService.js";
 
 const auth = getAuth(firebaseApp);
 
-// export async function createCourse(request, h) {
-//   try {
-//     const { uid } = request.auth;
-
-//     const user = await userService.getUserProfile(uid);
-
-//     if (user == null) {
-//       return h
-//         .response({
-//           status: 404,
-//           message: "User not found",
-//         })
-//         .code(404);
-//     }
-
-//     // Check if the user's role is "creator"
-//     if (user.role !== "creator") {
-//       return h
-//         .response({
-//           status: 403,
-//           message: "Unauthorized. Only creators can create a course.",
-//         })
-//         .code(403);
-//     }
-
-//     const { name, description, content } = request.payload;
-
-//     if (!name || !description || !content) {
-//       return h
-//         .response({
-//           status: 400,
-//           message: "Missing required fields",
-//         })
-//         .code(400);
-//     }
-
-//     const courseData = { name, description, content };
-
-//     const courseId = await courseService.createCourse(courseData);
-
-//     return h
-//       .response({
-//         status: 201,
-//         message: "Course created successfully",
-//         courseId: courseId,
-//       })
-//       .code(201);
-//   } catch (error) {
-//     console.log(error.message);
-//     return h
-//       .response({
-//         status: 500,
-//         message: "An error occurred while creating the course.",
-//       })
-//       .code(500);
-//   }
-// }
-
 export async function createCourse(request, h) {
   try {
     const { uid } = request.auth;
@@ -142,6 +84,53 @@ export async function getCourseById(request, h) {
       .response({
         status: 500,
         message: "An error occurred while fetching the course.",
+      })
+      .code(500);
+  }
+}
+
+export async function getCourseByCreator(request, h) {
+  try {
+    const { uid } = request.auth;
+
+    const user = await userService.getUserProfile(uid);
+
+    if (!user) {
+      return h.response({ status: 404, message: "User not found" }).code(404);
+    }
+
+    if (user.role !== "creator") {
+      return h
+        .response({
+          status: 403,
+          message:
+            "Unauthorized. Only creators can retrieve creator's courses.",
+        })
+        .code(403);
+    }
+
+    const courses = await courseService.getCourseByCreator(uid);
+
+    if (courses.length === 0) {
+      return h
+        .response({
+          status: 200,
+          message: "No courses found for this creator",
+        })
+        .code(200);
+    }
+
+    return h.response({
+      status: 200,
+      message: "Courses retrieved successfully.",
+      data: courses,
+    });
+  } catch (error) {
+    console.error(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while fetching the courses.",
       })
       .code(500);
   }

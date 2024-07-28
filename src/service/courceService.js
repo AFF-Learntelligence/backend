@@ -9,6 +9,8 @@ import {
   updateDoc,
   getDoc,
   getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 import config from "../config/config.js";
 import axios from "axios";
@@ -66,6 +68,26 @@ export const courseService = {
     courseData.content = await getCourseContent(courseRef);
 
     return courseData;
+  },
+
+  async getCourseByCreator(userId) {
+    const coursesRef = collection(db, "Courses");
+
+    const creatorRef = doc(db, "Users", userId);
+    const coursesQuery = query(coursesRef, where("creator", "==", creatorRef));
+    const coursesSnapshot = await getDocs(coursesQuery);
+
+    const courses = [];
+    for (const courseDoc of coursesSnapshot.docs) {
+      const courseData = courseDoc.data();
+      courseData.id = courseDoc.id;
+
+      const { creator, ...courseWithoutCreator } = courseData;
+
+      courses.push(courseWithoutCreator);
+    }
+
+    return courses;
   },
 };
 
