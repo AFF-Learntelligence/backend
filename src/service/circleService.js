@@ -18,7 +18,6 @@ export const circleService = {
   async createCircle(userId, circleData) {
     const circlesRef = collection(db, "Circles");
     const circleDocRef = await addDoc(circlesRef, {
-      creator: doc(db, "Users", userId),
       circleName: circleData.circleName,
       description: circleData.description,
       invitationLink: "",
@@ -73,7 +72,7 @@ export const circleService = {
     const circleData = circleSnapshot.data();
 
     // Fetch members asynchronously using memberService
-    const membersPromise = getMembers(circleRef, circleData.creator.id);
+    const membersPromise = getMembers(circleRef, circleData);
 
     // Fetch courses asynchronously using courseService
     const coursesPromise = getCourses(circleRef);
@@ -88,7 +87,7 @@ export const circleService = {
   },
 };
 
-async function getMembers(circleRef, creatorId) {
+async function getMembers(circleRef) {
   const membersCollectionRef = collection(circleRef, "Members");
   const membersSnapshot = await getDocs(membersCollectionRef);
   const members = [];
@@ -100,16 +99,11 @@ async function getMembers(circleRef, creatorId) {
 
     if (userDoc.exists()) {
       const userData = userDoc.data();
-      let role = "User";
-
-      if (userDoc.id === creatorId) {
-        role = "Creator";
-      }
 
       members.push({
         memberId: userDoc.id,
         name: userData.name,
-        role: role,
+        role: userData.role,
       });
     }
   }
