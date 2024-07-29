@@ -6,13 +6,12 @@ const auth = getAuth(firebaseApp);
 
 export async function updateUserProfile(request, h) {
   try {
-    const { name, phone } = request.payload;
+    const { name } = request.payload;
 
     const { uid } = request.auth;
 
     const updateData = {};
     if (name) updateData.name = name;
-    if (phone) updateData.phone = phone;
 
     await userService.updateUserProfile(uid, updateData);
 

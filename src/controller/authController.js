@@ -23,7 +23,6 @@ export async function register(request, h) {
     const data = {
       email: email,
       name: name,
-      phone: phone,
       role: "user",
     };
 
