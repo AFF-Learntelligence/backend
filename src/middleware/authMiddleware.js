@@ -5,7 +5,10 @@ const validateFirebaseIdToken = async (request, h) => {
 
   if (!authorization) {
     return h
-      .response({ message: "Missing authorization header" })
+      .response({
+        status: 401,
+        message: "Missing authorization header",
+      })
       .code(401)
       .takeover();
   }
@@ -13,7 +16,10 @@ const validateFirebaseIdToken = async (request, h) => {
   const tokenParts = authorization.split(" ");
   if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
     return h
-      .response({ message: "Invalid authorization header format" })
+      .response({
+        status: 401,
+        message: "Invalid authorization header format",
+      })
       .code(401)
       .takeover();
   }
@@ -33,6 +39,7 @@ const validateFirebaseIdToken = async (request, h) => {
     if (error.code === "auth/id-token-expired") {
       return h
         .response({
+          status: 401,
           message: "Your session has expired. Please log in again to continue.",
         })
         .code(401)
@@ -42,7 +49,10 @@ const validateFirebaseIdToken = async (request, h) => {
       error.code === "auth/invalid-token"
     ) {
       return h
-        .response({ message: "Invalid ID token provided." })
+        .response({
+          status: 401,
+          message: "Invalid ID token provided.",
+        })
         .code(401)
         .takeover();
     } else if (
@@ -50,12 +60,18 @@ const validateFirebaseIdToken = async (request, h) => {
       error.message.includes("permission denied")
     ) {
       return h
-        .response({ message: "Missing or insufficient permissions." })
+        .response({
+          status: 403,
+          message: "Missing or insufficient permissions.",
+        })
         .code(403)
         .takeover();
     }
 
-    return h.response({ message: "Invalid ID token" }).code(401).takeover();
+    return h
+      .response({ status: 401, message: "Invalid ID token" })
+      .code(401)
+      .takeover();
   }
 };
 
