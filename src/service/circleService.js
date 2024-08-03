@@ -62,12 +62,21 @@ export const circleService = {
     return "joined";
   },
 
-  async getCircleDetails(circleId) {
+  async getCircleDetails(circleId, userId) {
     const circleRef = doc(db, "Circles", circleId);
     const circleSnapshot = await getDoc(circleRef);
 
     if (!circleSnapshot.exists()) {
       return null;
+    }
+
+    // Check if user is a member of the circle
+    const memberRef = collection(circleRef, "Members");
+    const memberDocRef = doc(memberRef, userId);
+    const memberSnapshot = await getDoc(memberDocRef);
+
+    if (!memberSnapshot.exists()) {
+      return "not_a_member";
     }
 
     const circleData = circleSnapshot.data();

@@ -102,8 +102,9 @@ export async function joinCircle(request, h) {
 
 export async function getCircleDetails(request, h) {
   try {
+    const { uid } = request.auth;
     const { circleId } = request.params;
-    const data = await circleService.getCircleDetails(circleId);
+    const data = await circleService.getCircleDetails(circleId, uid);
 
     if (data === null) {
       return h
@@ -114,12 +115,23 @@ export async function getCircleDetails(request, h) {
         .code(404);
     }
 
+    if (data === "not_a_member") {
+      return h
+        .response({
+          status: 403,
+          message: "User is not a member of the circle.",
+        })
+        .code(403);
+    }
+
     return h
       .response({
         status: 200,
         message: "Circle details retrieved successfully.",
         data: {
-          ...data.circleData,
+          circleName: data.circleName,
+          description: data.description,
+          invitationLink: data.invitationLink,
           members: data.members,
           courses: data.courses,
         },
