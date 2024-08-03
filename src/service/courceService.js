@@ -18,6 +18,7 @@ import axios from "axios";
 const auth = getAuth(firebaseApp);
 
 export const courseService = {
+  // This function creates the course and initiates the content fetching
   async createCourse(userId, courseData) {
     const courseId = await saveInitialCourseData(userId, courseData);
 
@@ -26,6 +27,27 @@ export const courseService = {
       .catch((error) => {
         console.error("Error fetching content", error);
       });
+
+    return courseId;
+  },
+
+  // Function to add course reference to circle and update course status
+  async addCourseToCircle(circleId, courseId) {
+    const circleRef = doc(db, "Circles", circleId);
+    const circleSnapshot = await getDoc(circleRef);
+
+    if (!circleSnapshot.exists()) {
+      throw new Error("Circle not found.");
+    }
+
+    const coursesRef = collection(circleRef, "Courses");
+    await setDoc(doc(coursesRef, courseId), {
+      courseId: doc(db, "Courses", courseId),
+    });
+
+    // Update the 'published' attribute of the course to true
+    const courseRef = doc(db, "Courses", courseId);
+    await updateDoc(courseRef, { published: true });
   },
 
   async generateChapter(chapterData) {
@@ -82,6 +104,7 @@ export const courseService = {
   },
 };
 
+// This function saves the initial course data to Firestore
 async function saveInitialCourseData(userId, courseData) {
   const { name, description } = courseData;
   const coursesRef = collection(db, "Courses");
@@ -89,6 +112,7 @@ async function saveInitialCourseData(userId, courseData) {
     name,
     description,
     onContentLoading: true,
+    published: false,
     creator: doc(db, "Users", userId),
   });
   return courseDocRef.id;

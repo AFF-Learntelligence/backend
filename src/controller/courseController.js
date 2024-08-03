@@ -24,7 +24,7 @@ export async function createCourse(request, h) {
         .code(403);
     }
 
-    const { name, description, content } = request.payload;
+    const { name, description, content, circleId } = request.payload;
 
     if (!name || !description || !content) {
       return h
@@ -34,10 +34,21 @@ export async function createCourse(request, h) {
 
     const courseData = { name, description, content };
 
-    const courseId = await courseService.createCourse({
-      uid,
-      courseData,
-    });
+    const courseId = await courseService.createCourse(uid, courseData);
+
+    // If circleId is provided, add the course reference to the circle
+    if (circleId) {
+      try {
+        await courseService.addCourseToCircle(circleId, courseId);
+      } catch (error) {
+        return h
+          .response({
+            status: 404,
+            message: error.message,
+          })
+          .code(404);
+      }
+    }
 
     return h
       .response({
