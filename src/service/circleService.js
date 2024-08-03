@@ -149,16 +149,16 @@ async function getCourses(circleRef) {
   const courses = [];
 
   for (const courseDoc of coursesSnapshot.docs) {
-    const courseId = courseDoc.id;
-    const courseData = courseDoc.data();
-    const courseRef = courseData.courseId;
-    const courseDoc = await getDoc(courseRef);
+    const courseRef = doc(db, "Courses", courseDoc.id);
+    const courseSnapshot = await getDoc(courseRef);
 
-    if (courseDoc.exists()) {
-      const courseData = courseDoc.data();
+    if (courseSnapshot.exists()) {
+      const courseData = courseSnapshot.data();
+
       courses.push({
-        courseId: courseId,
-        courseData: courseDoc.id,
+        id: courseDoc.id,
+        name: courseData.name,
+        description: courseData.description,
       });
     }
   }
