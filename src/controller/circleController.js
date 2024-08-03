@@ -135,3 +135,33 @@ export async function getCircleDetails(request, h) {
       .code(500);
   }
 }
+
+export async function getAllUserCircle(request, h) {
+  try {
+    const { uid } = request.auth;
+
+    const circles = await circleService.getAllUserCircle(uid);
+
+    if (circles.length === 0) {
+      return h.response({
+        status: 200,
+        message: "User is not a member of any circles.",
+        data: [],
+      });
+    }
+
+    return h.response({
+      status: 200,
+      message: "User's circles retrieved successfully.",
+      data: circles,
+    });
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while retrieving user's circle.",
+      })
+      .code(500);
+  }
+}

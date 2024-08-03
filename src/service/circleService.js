@@ -10,6 +10,7 @@ import {
   updateDoc,
   setDoc,
   addDoc,
+  query,
 } from "firebase/firestore";
 
 const auth = getAuth(firebaseApp);
@@ -84,6 +85,28 @@ export const circleService = {
     ]);
 
     return { ...circleData, members, courses };
+  },
+
+  async getAllUserCircle(userId) {
+    const circlesRef = collection(db, "Circles");
+    const circlesSnapshot = await getDocs(circlesRef);
+
+    const circles = [];
+    for (const circleDoc of circlesSnapshot.docs) {
+      const circleData = circleDoc.data();
+      const membersRef = collection(circleDoc.ref, "Members");
+      const memberDocRef = doc(membersRef, userId);
+      const memberSnapshot = await getDoc(memberDocRef);
+
+      if (memberSnapshot.exists()) {
+        circles.push({
+          id: circleDoc.id,
+          circleName: circleData.circleName,
+          description: circleData.description,
+        });
+      }
+    }
+    return circles;
   },
 };
 

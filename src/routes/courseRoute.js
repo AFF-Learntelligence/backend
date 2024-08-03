@@ -9,7 +9,7 @@ import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 export default function registerCircleRoutes(server) {
   server.route([
     {
-      path: "/api/course/create",
+      path: "/api/courses/create",
       method: "POST",
       handler: createCourse,
       options: {
@@ -17,7 +17,7 @@ export default function registerCircleRoutes(server) {
       },
     },
     {
-      path: "/api/course/{courseId}",
+      path: "/api/courses/{courseId}",
       method: "GET",
       handler: getCourseById,
       options: {
@@ -25,7 +25,7 @@ export default function registerCircleRoutes(server) {
       },
     },
     {
-      path: "/api/course/creator",
+      path: "/api/courses/creator",
       method: "GET",
       handler: getCourseByCreator,
       options: {
@@ -33,7 +33,7 @@ export default function registerCircleRoutes(server) {
       },
     },
     {
-      path: "/api/chapter/generate",
+      path: "/api/chapters/generate",
       method: "POST",
       handler: generateChapter,
       options: {
