@@ -161,7 +161,7 @@ export async function publishCourse(request, h) {
       return h
         .response({
           status: 403,
-          message: "Unauthorized. Only creators can add a course to circles.",
+          message: "Unauthorized. Only creators can publish course to circles.",
         })
         .code(403);
     }
@@ -188,7 +188,7 @@ export async function publishCourse(request, h) {
     } catch (error) {
       const statusCode =
         error.message ===
-        "Unauthorized. Only the course creator can add the course to circles."
+        "Unauthorized. Only the course creator can publish the course to circles."
           ? 403
           : 404;
       return h
@@ -202,7 +202,7 @@ export async function publishCourse(request, h) {
     return h
       .response({
         status: 200,
-        message: "Course added to circles successfully.",
+        message: "Course published to circles successfully.",
       })
       .code(200);
   } catch (error) {
@@ -210,7 +210,7 @@ export async function publishCourse(request, h) {
     return h
       .response({
         status: 500,
-        message: "An error occurred while adding the course to circles.",
+        message: "An error occurred while publishing the course to circles.",
       })
       .code(500);
   }

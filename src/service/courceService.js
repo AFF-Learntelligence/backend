@@ -45,7 +45,7 @@ export const courseService = {
     const courseCreatorRef = courseData.creator;
     if (courseCreatorRef.id !== userId) {
       throw new Error(
-        "Unauthorized. Only the course creator can add the course to circles."
+        "Unauthorized. Only the course creator can publish the course to circles."
       );
     }
 
