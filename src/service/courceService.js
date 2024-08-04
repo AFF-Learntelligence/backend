@@ -43,6 +43,7 @@ export const courseService = {
 
     const courseData = courseSnapshot.data();
     const courseCreatorRef = courseData.creator;
+
     if (courseCreatorRef.id !== userId) {
       throw new Error(
         "Unauthorized. Only the course creator can publish the course to circles."
@@ -58,6 +59,17 @@ export const courseService = {
       }
 
       const coursesRef = collection(circleRef, "Courses");
+      const courseDocRef = doc(coursesRef, courseId);
+      const courseInCircleSnapshot = await getDoc(courseDocRef);
+
+      // Check if course already adden to the circle
+      if (courseInCircleSnapshot.exists()) {
+        console.log(
+          `Course ${courseId} is already added to Circle ${circleId}`
+        );
+        continue;
+      }
+
       await setDoc(doc(coursesRef, courseId), {
         courseId: doc(db, "Courses", courseId),
       });
