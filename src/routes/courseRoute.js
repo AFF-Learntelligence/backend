@@ -3,6 +3,7 @@ import {
   getCourseById,
   generateChapter,
   getCourseByCreator,
+  publishCourse,
 } from "../controller/courseController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -28,6 +29,14 @@ export default function registerCircleRoutes(server) {
       path: "/api/courses/creator",
       method: "GET",
       handler: getCourseByCreator,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/courses/publish",
+      method: "POST",
+      handler: publishCourse,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

@@ -39,7 +39,7 @@ export async function createCourse(request, h) {
     // If circleId is provided, add the course reference to the circle
     if (circleId) {
       try {
-        await courseService.addCourseToCircle(circleId, courseId);
+        await courseService.addCourseToCircle(uid, courseId, [circleId]);
       } catch (error) {
         return h
           .response({
@@ -142,6 +142,75 @@ export async function getCourseByCreator(request, h) {
       .response({
         status: 500,
         message: "An error occurred while fetching the courses.",
+      })
+      .code(500);
+  }
+}
+
+export async function publishCourse(request, h) {
+  try {
+    const { uid } = request.auth;
+
+    const user = await userService.getUserProfile(uid);
+
+    if (!user) {
+      return h.response({ status: 404, message: "User not found" }).code(404);
+    }
+
+    if (user.role !== "creator") {
+      return h
+        .response({
+          status: 403,
+          message: "Unauthorized. Only creators can add a course to circles.",
+        })
+        .code(403);
+    }
+
+    const { courseId, circleIds } = request.payload;
+
+    if (
+      !courseId ||
+      !circleIds ||
+      !Array.isArray(circleIds) ||
+      circleIds.length === 0
+    ) {
+      return h
+        .response({
+          status: 400,
+          message: "Missing required fields or invalid data!",
+        })
+        .code(400);
+    }
+
+    // Add course to multiple circles
+    try {
+      await courseService.addCourseToCircle(uid, courseId, circleIds);
+    } catch (error) {
+      const statusCode =
+        error.message ===
+        "Unauthorized. Only the course creator can add the course to circles."
+          ? 403
+          : 404;
+      return h
+        .response({
+          status: statusCode,
+          message: error.message,
+        })
+        .code(statusCode);
+    }
+
+    return h
+      .response({
+        status: 200,
+        message: "Course added to circles successfully.",
+      })
+      .code(200);
+  } catch (error) {
+    console.error(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while adding the course to circles.",
       })
       .code(500);
   }

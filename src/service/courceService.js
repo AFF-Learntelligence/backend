@@ -18,7 +18,7 @@ import axios from "axios";
 const auth = getAuth(firebaseApp);
 
 export const courseService = {
-  // This function creates the course and initiates the content fetching
+  // Service that creates the course and initiates the content fetching
   async createCourse(userId, courseData) {
     const courseId = await saveInitialCourseData(userId, courseData);
 
@@ -31,25 +31,44 @@ export const courseService = {
     return courseId;
   },
 
-  // Function to add course reference to circle and update course status
-  async addCourseToCircle(circleId, courseId) {
-    const circleRef = doc(db, "Circles", circleId);
-    const circleSnapshot = await getDoc(circleRef);
+  // Service that add course reference to circle and update course status
+  async addCourseToCircle(userId, courseId, circleIds) {
+    // Check if user is creator of course
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
 
-    if (!circleSnapshot.exists()) {
-      throw new Error("Circle not found.");
+    if (!courseSnapshot.exists()) {
+      throw new Error(`Course not found: ${courseId}`);
     }
 
-    const coursesRef = collection(circleRef, "Courses");
-    await setDoc(doc(coursesRef, courseId), {
-      courseId: doc(db, "Courses", courseId),
-    });
+    const courseData = courseSnapshot.data();
+    const courseCreatorRef = courseData.creator;
+    if (courseCreatorRef.id !== userId) {
+      throw new Error(
+        "Unauthorized. Only the course creator can add the course to circles."
+      );
+    }
 
-    // Update the 'published' attribute of the course to true
-    const courseRef = doc(db, "Courses", courseId);
-    await updateDoc(courseRef, { published: true });
+    for (const circleId of circleIds) {
+      const circleRef = doc(db, "Circles", circleId);
+      const circleSnapshot = await getDoc(circleRef);
+
+      if (!circleSnapshot.exists()) {
+        throw new Error(`Circle not found: ${circleId}`);
+      }
+
+      const coursesRef = collection(circleRef, "Courses");
+      await setDoc(doc(coursesRef, courseId), {
+        courseId: doc(db, "Courses", courseId),
+      });
+
+      // Update the 'published' attribute of the course to true
+      const courseRef = doc(db, "Courses", courseId);
+      await updateDoc(courseRef, { published: true });
+    }
   },
 
+  // Service that generates chapter using ML API
   async generateChapter(chapterData) {
     const { title, length } = chapterData;
 
