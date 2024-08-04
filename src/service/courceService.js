@@ -31,53 +31,17 @@ export const courseService = {
     return courseId;
   },
 
-  // Service that add course reference to circle and update course status
+  // Service that adds course reference to circle and updates course status
   async addCourseToCircle(userId, courseId, circleIds) {
-    // Check if user is creator of course
-    const courseRef = doc(db, "Courses", courseId);
-    const courseSnapshot = await getDoc(courseRef);
-
-    if (!courseSnapshot.exists()) {
-      throw new Error(`Course not found: ${courseId}`);
-    }
-
-    const courseData = courseSnapshot.data();
-    const courseCreatorRef = courseData.creator;
-
-    if (courseCreatorRef.id !== userId) {
-      throw new Error(
-        "Unauthorized. Only the course creator can publish the course to circles."
-      );
-    }
+    const courseData = await verifyCourseCreator(userId, courseId);
 
     for (const circleId of circleIds) {
-      const circleRef = doc(db, "Circles", circleId);
-      const circleSnapshot = await getDoc(circleRef);
-
-      if (!circleSnapshot.exists()) {
-        throw new Error(`Circle not found: ${circleId}`);
-      }
-
-      const coursesRef = collection(circleRef, "Courses");
-      const courseDocRef = doc(coursesRef, courseId);
-      const courseInCircleSnapshot = await getDoc(courseDocRef);
-
-      // Check if course already adden to the circle
-      if (courseInCircleSnapshot.exists()) {
-        console.log(
-          `Course ${courseId} is already added to Circle ${circleId}`
-        );
-        continue;
-      }
-
-      await setDoc(doc(coursesRef, courseId), {
-        courseId: doc(db, "Courses", courseId),
-      });
-
-      // Update the 'published' attribute of the course to true
-      const courseRef = doc(db, "Courses", courseId);
-      await updateDoc(courseRef, { published: true });
+      await verifyCircleExists(circleId);
+      await verifyUserJoinedCircle(userId, circleId);
+      await addCourseToCircleDB(courseId, circleId);
     }
+
+    await updateCoursePublishedStatus(courseId, true);
   },
 
   // Service that generates chapter using ML API
@@ -135,7 +99,7 @@ export const courseService = {
   },
 };
 
-// This function saves the initial course data to Firestore
+// Save the initial course data to Firestore
 async function saveInitialCourseData(userId, courseData) {
   const { name, description } = courseData;
   const coursesRef = collection(db, "Courses");
@@ -149,6 +113,7 @@ async function saveInitialCourseData(userId, courseData) {
   return courseDocRef.id;
 }
 
+// Fetch content for the course from the external API
 async function fetchContent(courseData) {
   const response = await axios.post(config.createCourseAPI, {
     courseName: courseData.name,
@@ -159,6 +124,7 @@ async function fetchContent(courseData) {
   return response.data;
 }
 
+// Save the fetched content to Firestore
 async function saveContentToDb(courseId, content) {
   const courseRef = doc(db, "Courses", courseId);
   const contentCollectionRef = collection(courseRef, "content");
@@ -170,6 +136,7 @@ async function saveContentToDb(courseId, content) {
   await updateDoc(courseRef, { onContentLoading: false });
 }
 
+// Add a chapter to the course content collection
 async function addChapter(contentCollectionRef, chapter) {
   const chapterDocRef = doc(contentCollectionRef, `chapter${chapter.chapter}`);
   await setDoc(chapterDocRef, {
@@ -181,6 +148,7 @@ async function addChapter(contentCollectionRef, chapter) {
   await addQuizzes(chapterDocRef, chapter.quiz);
 }
 
+// Add quizzes to a chapter
 async function addQuizzes(chapterDocRef, quizzes) {
   const quizCollectionRef = collection(chapterDocRef, "quiz");
   for (const quiz of quizzes) {
@@ -194,6 +162,7 @@ async function addQuizzes(chapterDocRef, quizzes) {
   }
 }
 
+// Add choices to a quiz
 async function addChoices(quizDocRef, choices) {
   const choicesCollectionRef = collection(quizDocRef, "choices");
   for (const choice of choices) {
@@ -205,6 +174,7 @@ async function addChoices(quizDocRef, choices) {
   }
 }
 
+// Retrieve the content of the course
 async function getCourseContent(courseDocRef) {
   const contentCollectionRef = collection(courseDocRef, "content");
   const contentSnapshots = await getDocs(contentCollectionRef);
@@ -218,6 +188,7 @@ async function getCourseContent(courseDocRef) {
   return content;
 }
 
+// Retrieve the content of a chapter
 async function getChapterContent(chapterDocRef) {
   const chapterSnapshot = await getDoc(chapterDocRef);
   const chapterData = chapterSnapshot.data();
@@ -252,4 +223,72 @@ async function getChapterContent(chapterDocRef) {
   });
 
   return chapterData;
+}
+
+// Verify if the user is the creator of the course
+async function verifyCourseCreator(userId, courseId) {
+  const courseRef = doc(db, "Courses", courseId);
+  const courseSnapshot = await getDoc(courseRef);
+
+  if (!courseSnapshot.exists()) {
+    throw new Error(`Course not found: ${courseId}`);
+  }
+
+  const courseData = courseSnapshot.data();
+  const courseCreatorRef = courseData.creator;
+
+  if (courseCreatorRef.id !== userId) {
+    throw new Error(
+      "Unauthorized. Only the course creator can publish the course to circles."
+    );
+  }
+
+  return courseData;
+}
+
+// Verify if the circle exists
+async function verifyCircleExists(circleId) {
+  const circleRef = doc(db, "Circles", circleId);
+  const circleSnapshot = await getDoc(circleRef);
+
+  if (!circleSnapshot.exists()) {
+    throw new Error(`Circle not found: ${circleId}`);
+  }
+}
+
+// Verify if the user has joined the circle
+async function verifyUserJoinedCircle(userId, circleId) {
+  const circleMembersRef = collection(db, "Circles", circleId, "Members");
+  const userRef = doc(db, "Users", userId);
+  const membersQuery = query(circleMembersRef, where("userId", "==", userRef));
+  const membersSnapshot = await getDocs(membersQuery);
+
+  if (membersSnapshot.empty) {
+    throw new Error(`Unauthorized. You have not joined Circle ${circleId}`);
+  }
+}
+
+// Add course to the circle in Firestore
+async function addCourseToCircleDB(courseId, circleId) {
+  const circleRef = doc(db, "Circles", circleId);
+  const coursesRef = collection(circleRef, "Courses");
+  const courseDocRef = doc(coursesRef, courseId);
+
+  const courseInCircleSnapshot = await getDoc(courseDocRef);
+
+  // Check if course already added to the circle
+  if (courseInCircleSnapshot.exists()) {
+    console.log(`Course ${courseId} is already added to Circle ${circleId}`);
+    return;
+  }
+
+  await setDoc(doc(coursesRef, courseId), {
+    courseId: doc(db, "Courses", courseId),
+  });
+}
+
+// Update the published status of the course
+async function updateCoursePublishedStatus(courseId, status) {
+  const courseRef = doc(db, "Courses", courseId);
+  await updateDoc(courseRef, { published: status });
 }

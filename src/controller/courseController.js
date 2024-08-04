@@ -5,24 +5,27 @@ import { courseService } from "../service/courceService.js";
 
 const auth = getAuth(firebaseApp);
 
+// Helper function to check user existence and role
+async function checkUserAndRole(uid, requiredRole) {
+  const user = await userService.getUserProfile(uid);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.role !== requiredRole) {
+    throw new Error(
+      "Unauthorized. Only " + requiredRole + "s can perform this action."
+    );
+  }
+
+  return user;
+}
+
+// Handler for creating a course
 export async function createCourse(request, h) {
   try {
     const { uid } = request.auth;
-
-    const user = await userService.getUserProfile(uid);
-
-    if (!user) {
-      return h.response({ status: 404, message: "User not found" }).code(404);
-    }
-
-    if (user.role !== "creator") {
-      return h
-        .response({
-          status: 403,
-          message: "Unauthorized. Only creators can create a course.",
-        })
-        .code(403);
-    }
+    await checkUserAndRole(uid, "creator");
 
     const { name, description, content, circleId } = request.payload;
 
@@ -60,15 +63,17 @@ export async function createCourse(request, h) {
       .code(201);
   } catch (error) {
     console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
     return h
       .response({
-        status: 500,
-        message: "An error occurred while creating the course.",
+        status: statusCode,
+        message: error.message,
       })
-      .code(500);
+      .code(statusCode);
   }
 }
 
+// Handler for getting a course by ID
 export async function getCourseById(request, h) {
   try {
     const { courseId } = request.params;
@@ -100,25 +105,11 @@ export async function getCourseById(request, h) {
   }
 }
 
+// Handler for getting courses by creator
 export async function getCourseByCreator(request, h) {
   try {
     const { uid } = request.auth;
-
-    const user = await userService.getUserProfile(uid);
-
-    if (!user) {
-      return h.response({ status: 404, message: "User not found" }).code(404);
-    }
-
-    if (user.role !== "creator") {
-      return h
-        .response({
-          status: 403,
-          message:
-            "Unauthorized. Only creators can retrieve creator's courses.",
-        })
-        .code(403);
-    }
+    await checkUserAndRole(uid, "creator");
 
     const courses = await courseService.getCourseByCreator(uid);
 
@@ -138,33 +129,21 @@ export async function getCourseByCreator(request, h) {
     });
   } catch (error) {
     console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
     return h
       .response({
-        status: 500,
-        message: "An error occurred while fetching the courses.",
+        status: statusCode,
+        message: error.message,
       })
-      .code(500);
+      .code(statusCode);
   }
 }
 
+// Handler for publishing a course to multiple circles
 export async function publishCourse(request, h) {
   try {
     const { uid } = request.auth;
-
-    const user = await userService.getUserProfile(uid);
-
-    if (!user) {
-      return h.response({ status: 404, message: "User not found" }).code(404);
-    }
-
-    if (user.role !== "creator") {
-      return h
-        .response({
-          status: 403,
-          message: "Unauthorized. Only creators can publish course to circles.",
-        })
-        .code(403);
-    }
+    await checkUserAndRole(uid, "creator");
 
     const { courseId, circleIds } = request.payload;
 
@@ -186,11 +165,7 @@ export async function publishCourse(request, h) {
     try {
       await courseService.addCourseToCircle(uid, courseId, circleIds);
     } catch (error) {
-      const statusCode =
-        error.message ===
-        "Unauthorized. Only the course creator can publish the course to circles."
-          ? 403
-          : 404;
+      const statusCode = error.message.includes("Unauthorized") ? 403 : 404;
       return h
         .response({
           status: statusCode,
@@ -207,33 +182,21 @@ export async function publishCourse(request, h) {
       .code(200);
   } catch (error) {
     console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 404;
     return h
       .response({
-        status: 500,
-        message: "An error occurred while publishing the course to circles.",
+        status: statusCode,
+        message: error.message,
       })
-      .code(500);
+      .code(statusCode);
   }
 }
 
+// Handler for generating chapters
 export async function generateChapter(request, h) {
   try {
     const { uid } = request.auth;
-
-    const user = await userService.getUserProfile(uid);
-
-    if (!user) {
-      return h.response({ status: 404, message: "User not found" }).code(404);
-    }
-
-    if (user.role !== "creator") {
-      return h
-        .response({
-          status: 403,
-          message: "Unauthorized. Only creators can generate chapter.",
-        })
-        .code(403);
-    }
+    await checkUserAndRole(uid, "creator");
 
     const { title, length } = request.payload;
 
