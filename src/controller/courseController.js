@@ -76,9 +76,15 @@ export async function createCourse(request, h) {
 // Handler for getting a course by ID
 export async function getCourseById(request, h) {
   try {
+    const { uid } = request.auth;
     const { courseId } = request.params;
+    const { circleId } = request.query;
 
-    const courseData = await courseService.getCourseById(courseId);
+    const courseData = await courseService.getCourseById(
+      uid,
+      courseId,
+      circleId
+    );
 
     if (courseData === null) {
       return h
@@ -96,12 +102,13 @@ export async function getCourseById(request, h) {
     });
   } catch (error) {
     console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
     return h
       .response({
-        status: 500,
-        message: "An error occurred while fetching the course.",
+        status: statusCode,
+        message: error.message,
       })
-      .code(500);
+      .code(statusCode);
   }
 }
 

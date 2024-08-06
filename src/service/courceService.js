@@ -61,7 +61,7 @@ export const courseService = {
     }
   },
 
-  async getCourseById(courseId) {
+  async getCourseById(userId, courseId, circleId) {
     const courseRef = doc(db, "Courses", courseId);
     const courseSnapshot = await getDoc(courseRef);
 
@@ -70,6 +70,17 @@ export const courseService = {
     }
 
     const courseData = courseSnapshot.data();
+
+    if (courseData.published === false) {
+      if (courseData.creator.id !== userId) {
+        throw new Error(
+          "Unauthorized. Only the course creator can access this course."
+        );
+      }
+    } else {
+      await verifyCircleExists(circleId);
+      await verifyUserJoinedCircle(userId, circleId);
+    }
 
     courseData.content = await getCourseContent(courseRef);
 
@@ -238,9 +249,7 @@ async function verifyCourseCreator(userId, courseId) {
   const courseCreatorRef = courseData.creator;
 
   if (courseCreatorRef.id !== userId) {
-    throw new Error(
-      "Unauthorized. Only the course creator can publish the course to circles."
-    );
+    throw new Error("Unauthorized.");
   }
 
   return courseData;
@@ -264,7 +273,7 @@ async function verifyUserJoinedCircle(userId, circleId) {
   const membersSnapshot = await getDocs(membersQuery);
 
   if (membersSnapshot.empty) {
-    throw new Error(`Unauthorized. You have not joined Circle ${circleId}`);
+    throw new Error(`Unauthorized. You have not joined this circle`);
   }
 }
 
