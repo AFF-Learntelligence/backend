@@ -2,6 +2,7 @@ import { getAuth } from "firebase/auth";
 import { firebaseApp } from "../config/firebaseConfig.js";
 import { userService } from "../service/userService.js";
 import { courseService } from "../service/courceService.js";
+import { fileService } from "../service/fileService.js";
 
 const auth = getAuth(firebaseApp);
 
@@ -238,6 +239,35 @@ export async function generateChapter(request, h) {
       .response({
         status: 500,
         message: "An error occurred while generating chapter.",
+      })
+      .code(500);
+  }
+}
+
+export async function uploadPdf(request, h) {
+  try {
+    const { file } = request.payload;
+
+    if (!file) {
+      return h.response({ status: 400, message: "No file uploaded" }).code(400);
+    }
+
+    const fileName = file.hapi.filename;
+    const url = await fileService.uploadPdf(file, fileName);
+
+    return h
+      .response({
+        status: 200,
+        message: "File uploaded successfully",
+        data: { url },
+      })
+      .code(200);
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while uploading the file.",
       })
       .code(500);
   }

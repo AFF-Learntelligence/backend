@@ -4,6 +4,7 @@ import {
   generateChapter,
   getCourseByCreator,
   publishCourse,
+  uploadPdf,
 } from "../controller/courseController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -47,6 +48,20 @@ export default function registerCircleRoutes(server) {
       handler: generateChapter,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/courses/pdf",
+      method: "POST",
+      handler: uploadPdf,
+      config: {
+        payload: {
+          maxBytes: 10 * 1024 * 1024, // 10MB
+          output: "stream",
+          parse: true,
+          multipart: true,
+          allow: "multipart/form-data",
+        },
       },
     },
   ]);
