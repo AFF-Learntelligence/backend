@@ -259,7 +259,7 @@ export async function uploadPdf(request, h) {
       .response({
         status: 200,
         message: "File uploaded successfully",
-        data: { url },
+        url,
       })
       .code(200);
   } catch (error) {
