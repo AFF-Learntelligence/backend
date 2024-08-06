@@ -1,13 +1,11 @@
 import { Storage } from "@google-cloud/storage";
 import config from "../config/config.js";
 
-const key = JSON.parse(config.key);
-
 const storage = new Storage({
-  projectId: key.project_id,
+  projectId: config.key.project_id,
   credentials: {
-    client_email: key.client_email,
-    private_key: key.private_key,
+    client_email: config.key.client_email,
+    private_key: config.key.private_key,
   },
 });
 

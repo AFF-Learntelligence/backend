@@ -24,7 +24,8 @@ const {
   APP_URL,
   CREATE_COURSE_API,
   GENERATE_CHAPTERS_API,
-  BUCKET_KEY,
+  CLIENT_EMAIL_BUCKET,
+  PRIVATE_KEY_BUCKET,
 } = process.env;
 
 const config = {
@@ -55,7 +56,11 @@ const config = {
     client_x509_cert_url: CLIENT_X509_CERT_URL,
     universe_domain: UNIVERSE_DOMAIN,
   },
-  key: BUCKET_KEY,
+  key: {
+    project_id: PROJECT_ID,
+    client_email: CLIENT_EMAIL_BUCKET,
+    private_key: PRIVATE_KEY_BUCKET,
+  },
 };
 
 export default config;
