@@ -1,7 +1,7 @@
 import { Storage } from "@google-cloud/storage";
 import config from "../config/config.js";
 
-const key = JSON.parse(config.bucketKey);
+const key = JSON.parse(config.key);
 
 const storage = new Storage({
   projectId: key.project_id,

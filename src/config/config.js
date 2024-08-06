@@ -24,7 +24,7 @@ const {
   APP_URL,
   CREATE_COURSE_API,
   GENERATE_CHAPTERS_API,
-  BUCKET_KEY,
+  GCP_SA_KEY,
 } = process.env;
 
 const config = {
@@ -33,7 +33,6 @@ const config = {
   appUrl: APP_URL,
   createCourseAPI: CREATE_COURSE_API,
   generateChapterAPI: GENERATE_CHAPTERS_API,
-  bucketKey: BUCKET_KEY,
   firebaseConfig: {
     apiKey: API_KEY,
     authDomain: AUTH_DOMAIN,
@@ -56,6 +55,7 @@ const config = {
     client_x509_cert_url: CLIENT_X509_CERT_URL,
     universe_domain: UNIVERSE_DOMAIN,
   },
+  key: GCP_SA_KEY,
 };
 
 export default config;
