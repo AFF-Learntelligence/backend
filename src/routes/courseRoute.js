@@ -53,8 +53,8 @@ export default function registerCircleRoutes(server) {
     {
       path: "/api/courses/pdf",
       method: "POST",
-      handler: uploadPdf,
-      config: {
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
         payload: {
           maxBytes: 10 * 1024 * 1024, // 10MB
           output: "stream",
@@ -62,6 +62,7 @@ export default function registerCircleRoutes(server) {
           multipart: true,
           allow: "multipart/form-data",
         },
+        handler: uploadPdf,
       },
     },
   ]);
