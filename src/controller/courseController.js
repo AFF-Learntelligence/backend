@@ -221,10 +221,17 @@ export async function deleteCourse(request, h) {
         .code(404);
     }
 
-    return h.response({
-      status: 200,
-      message: "Course data deleted successfully.",
-    });
+    if (courseData === "course_data_deleted") {
+      return h.response({
+        status: 200,
+        message: "Course data deleted successfully.",
+      });
+    } else if (courseData === "course_circle_deleted") {
+      return h.response({
+        status: 200,
+        message: "Course deleted from circle successfully.",
+      });
+    }
   } catch (error) {
     console.error(error.message);
     const statusCode = error.message.includes("Unauthorized") ? 403 : 404;

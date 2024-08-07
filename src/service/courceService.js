@@ -131,6 +131,8 @@ export const courseService = {
       }
 
       await deleteDoc(courseRef);
+
+      return "course_data_deleted";
     } else if (courseData.published === true && circleId !== undefined) {
       await verifyCircleExists(circleId);
       await verifyUserJoinedCircle(userId, circleId);
@@ -140,6 +142,8 @@ export const courseService = {
       // Assuming Courses are stored in a subcollection in the Circle document
       const circleCourseRef = doc(circleRef, "Courses", courseId);
       await deleteDoc(circleCourseRef);
+
+      return "course_circle_deleted";
     }
   },
 };
