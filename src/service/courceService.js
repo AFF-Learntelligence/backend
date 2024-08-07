@@ -11,6 +11,7 @@ import {
   getDocs,
   query,
   where,
+  deleteDoc,
 } from "firebase/firestore";
 import config from "../config/config.js";
 import axios from "axios";
@@ -107,6 +108,39 @@ export const courseService = {
     }
 
     return courses;
+  },
+
+  async deleteCourse(userId, courseId, circleId) {
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
+
+    if (!courseSnapshot.exists()) {
+      return null;
+    }
+
+    const courseData = courseSnapshot.data();
+
+    if (
+      courseData.published === false ||
+      (courseData.published === true && circleId === undefined)
+    ) {
+      if (courseData.creator.id !== userId) {
+        throw new Error(
+          "Unauthorized. Only the course creator can delete this course."
+        );
+      }
+
+      await deleteDoc(courseRef);
+    } else if (courseData.published === true && circleId !== undefined) {
+      await verifyCircleExists(circleId);
+      await verifyUserJoinedCircle(userId, circleId);
+
+      const circleRef = doc(db, "Circles", circleId);
+
+      // Assuming Courses are stored in a subcollection in the Circle document
+      const circleCourseRef = doc(circleRef, "Courses", courseId);
+      await deleteDoc(circleCourseRef);
+    }
   },
 };
 

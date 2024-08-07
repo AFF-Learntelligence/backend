@@ -5,6 +5,7 @@ import {
   getCourseByCreator,
   publishCourse,
   uploadPdf,
+  deleteCourse,
 } from "../controller/courseController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -38,6 +39,14 @@ export default function registerCircleRoutes(server) {
       path: "/api/courses/publish",
       method: "POST",
       handler: publishCourse,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/courses/{courseId}",
+      method: "DELETE",
+      handler: deleteCourse,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

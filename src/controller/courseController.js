@@ -200,6 +200,43 @@ export async function publishCourse(request, h) {
   }
 }
 
+export async function deleteCourse(request, h) {
+  try {
+    const { uid } = request.auth;
+    const { courseId } = request.params;
+    const { circleId } = request.query;
+
+    const courseData = await courseService.deleteCourse(
+      uid,
+      courseId,
+      circleId
+    );
+
+    if (courseData === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Course not found",
+        })
+        .code(404);
+    }
+
+    return h.response({
+      status: 200,
+      message: "Course data deleted successfully.",
+    });
+  } catch (error) {
+    console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 404;
+    return h
+      .response({
+        status: statusCode,
+        message: error.message,
+      })
+      .code(statusCode);
+  }
+}
+
 // Handler for generating chapters
 export async function generateChapter(request, h) {
   try {
