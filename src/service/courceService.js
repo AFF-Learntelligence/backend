@@ -110,6 +110,69 @@ export const courseService = {
     return courses;
   },
 
+  async updateCourseData(userId, courseId, circleId, updateData) {
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
+
+    if (!courseSnapshot.exists()) {
+      return null;
+    }
+
+    const courseData = courseSnapshot.data();
+
+    if (
+      courseData.published === false ||
+      (courseData.published === true && circleId === undefined)
+    ) {
+      if (courseData.creator.id !== userId) {
+        throw new Error(
+          "Unauthorized. Only the course creator can access this course."
+        );
+      }
+    } else if (courseData.published === true && circleId !== undefined) {
+      await verifyCircleExists(circleId);
+      await verifyUserJoinedCircle(userId, circleId);
+    }
+
+    // update course data with updateData here
+    await updateDoc(courseRef, updateData);
+
+    return true;
+  },
+
+  async updateCourseContent(userId, courseId, circleId, content) {
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
+
+    if (!courseSnapshot.exists()) {
+      return null;
+    }
+
+    const courseData = courseSnapshot.data();
+
+    if (
+      courseData.published === false ||
+      (courseData.published === true && circleId === undefined)
+    ) {
+      if (courseData.creator.id !== userId) {
+        throw new Error(
+          "Unauthorized. Only the course creator can access this course."
+        );
+      }
+    } else if (courseData.published === true && circleId !== undefined) {
+      await verifyCircleExists(circleId);
+      await verifyUserJoinedCircle(userId, circleId);
+    }
+
+    const contentCollectionRef = collection(courseRef, "content");
+
+    for (const chapter of content) {
+      await addOrUpdateChapter(contentCollectionRef, chapter);
+    }
+
+    return true;
+  },
+
   async deleteCourse(userId, courseId, circleId) {
     const courseRef = doc(db, "Courses", courseId);
     const courseSnapshot = await getDoc(courseRef);
@@ -130,6 +193,7 @@ export const courseService = {
         );
       }
 
+      await deleteExistingContent(courseRef);
       await deleteDoc(courseRef);
 
       return "course_data_deleted";
@@ -179,22 +243,75 @@ async function saveContentToDb(courseId, content) {
   const contentCollectionRef = collection(courseRef, "content");
 
   for (const chapter of content) {
-    await addChapter(contentCollectionRef, chapter);
+    await addOrUpdateChapter(contentCollectionRef, chapter);
   }
 
   await updateDoc(courseRef, { onContentLoading: false });
 }
 
 // Add a chapter to the course content collection
-async function addChapter(contentCollectionRef, chapter) {
+async function addOrUpdateChapter(contentCollectionRef, chapter) {
   const chapterDocRef = doc(contentCollectionRef, `chapter${chapter.chapter}`);
-  await setDoc(chapterDocRef, {
-    chapter: chapter.chapter,
-    title: chapter.title,
-    text: chapter.text,
-  });
+  const chapterSnapshot = await getDoc(chapterDocRef);
+
+  if (chapterSnapshot.exists()) {
+    // If the chapter exists, update it
+    await updateDoc(chapterDocRef, {
+      title: chapter.title,
+      text: chapter.text,
+    });
+
+    // Delete existing quizzes and choices before adding new ones
+    await deleteExistingQuizzes(chapterDocRef);
+  } else {
+    // If the chapter doesn't exist, create it
+    await setDoc(chapterDocRef, {
+      chapter: chapter.chapter,
+      title: chapter.title,
+      text: chapter.text,
+    });
+  }
 
   await addQuizzes(chapterDocRef, chapter.quiz);
+}
+
+async function deleteExistingContent(courseRef) {
+  const contentCollectionRef = collection(courseRef, "content");
+  const contentSnapshots = await getDocs(contentCollectionRef);
+
+  for (const chapterDoc of contentSnapshots.docs) {
+    const chapterRef = chapterDoc.ref;
+
+    // Delete all quizzes and choices for the chapter
+    await deleteExistingQuizzes(chapterRef);
+
+    // Delete the chapter itself
+    await deleteDoc(chapterRef);
+  }
+}
+
+// Delete existing quizzes and choices in a chapter
+async function deleteExistingQuizzes(chapterDocRef) {
+  const quizCollectionRef = collection(chapterDocRef, "quiz");
+  const quizSnapshot = await getDocs(quizCollectionRef);
+
+  for (const quizDoc of quizSnapshot.docs) {
+    const quizDocRef = quizDoc.ref;
+    // Delete choices associated with this quiz
+    await deleteExistingChoices(quizDocRef);
+    // Delete the quiz itself
+    await deleteDoc(quizDocRef);
+  }
+}
+
+// Delete existing choices in a quiz
+async function deleteExistingChoices(quizDocRef) {
+  const choicesCollectionRef = collection(quizDocRef, "choices");
+  const choicesSnapshot = await getDocs(choicesCollectionRef);
+
+  for (const choiceDoc of choicesSnapshot.docs) {
+    await deleteDoc(choiceDoc.ref);
+  }
 }
 
 // Add quizzes to a chapter

@@ -200,6 +200,67 @@ export async function publishCourse(request, h) {
   }
 }
 
+// Handler for updating a course by ID
+export async function updateCourseById(request, h) {
+  try {
+    const { uid } = request.auth;
+    await checkUserAndRole(uid, "creator");
+
+    const { name, description, content } = request.payload;
+    const { courseId } = request.params;
+    const { circleId } = request.query;
+
+    let updateData = {}; // Initialize updateData as an empty object
+
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+
+    let status;
+
+    if (Object.keys(updateData).length > 0) {
+      // Check if there's anything to update
+      status = await courseService.updateCourseData(
+        uid,
+        courseId,
+        circleId,
+        updateData
+      );
+    }
+
+    if (content) {
+      status = await courseService.updateCourseContent(
+        uid,
+        courseId,
+        circleId,
+        content
+      );
+    }
+
+    if (status === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Course not found",
+        })
+        .code(404);
+    }
+
+    return h.response({
+      status: 200,
+      message: "Course data updated successfully.",
+    });
+  } catch (error) {
+    console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
+    return h
+      .response({
+        status: statusCode,
+        message: error.message,
+      })
+      .code(statusCode);
+  }
+}
+
 export async function deleteCourse(request, h) {
   try {
     const { uid } = request.auth;
