@@ -28,7 +28,8 @@ export async function createCourse(request, h) {
     const { uid } = request.auth;
     await checkUserAndRole(uid, "creator");
 
-    const { name, description, content, circleId } = request.payload;
+    const { name, description, content, circleId, pdfUrls, youtubeUrls, lang } =
+      request.payload;
 
     if (!name || !description || !content) {
       return h
@@ -36,7 +37,14 @@ export async function createCourse(request, h) {
         .code(400);
     }
 
-    const courseData = { name, description, content };
+    const courseData = {
+      name,
+      description,
+      content,
+      pdfUrls,
+      youtubeUrls,
+      lang,
+    };
 
     const courseId = await courseService.createCourse(uid, courseData);
 

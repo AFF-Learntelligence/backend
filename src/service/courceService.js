@@ -232,6 +232,9 @@ async function fetchContent(courseData) {
     courseName: courseData.name,
     description: courseData.description,
     content: courseData.content,
+    pdf_urls: courseData.pdfUrls,
+    youtube_urls: courseData.youtubeUrls,
+    lang: courseData.lang,
   });
 
   return response.data;
