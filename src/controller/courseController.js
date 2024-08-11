@@ -359,6 +359,9 @@ export async function generateChapter(request, h) {
 
 export async function uploadPdf(request, h) {
   try {
+    const { uid } = request.auth;
+    await checkUserAndRole(uid, "creator");
+
     const { file } = request.payload;
 
     if (!file) {
