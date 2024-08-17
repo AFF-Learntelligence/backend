@@ -144,3 +144,34 @@ export async function getUserCourses(request, h) {
       .code(500);
   }
 }
+
+export async function requestRoleChange(request, h) {
+  try {
+    const { uid } = request.auth;
+    const { message } = request.payload;
+
+    const data = {
+      userId: uid,
+      message,
+      requestedRole: "creator",
+      status: "pending",
+      requestDate: new Date(),
+    };
+
+    await userService.requestRole(data);
+    return h
+      .response({
+        status: 200,
+        message: "Role change request submitted.",
+      })
+      .code(200);
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while sending change role request.",
+      })
+      .code(500);
+  }
+}

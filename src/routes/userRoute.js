@@ -3,6 +3,7 @@ import {
   updateEmailPassUser,
   getUserProfile,
   getUserCourses,
+  requestRoleChange,
 } from "../controller/userController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -36,6 +37,14 @@ export default function registerUserRoutes(server) {
       path: "/api/user/courses",
       method: "GET",
       handler: getUserCourses,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/user/request-role",
+      method: "POST",
+      handler: requestRoleChange,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

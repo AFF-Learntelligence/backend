@@ -8,6 +8,7 @@ import {
   getDocs,
   updateDoc,
   setDoc,
+  addDoc,
 } from "firebase/firestore";
 
 const auth = getAuth(firebaseApp);
@@ -42,5 +43,10 @@ export const userService = {
     const coursesRef = collection(docRef, "Courses");
     const coursesSnapshot = await getDocs(coursesRef);
     return coursesSnapshot.docs.map((doc) => doc.data());
+  },
+
+  async requestRole(data) {
+    const collectionRef = collection(db, "RoleChangeRequests");
+    await addDoc(collectionRef, data);
   },
 };
