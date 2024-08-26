@@ -13,6 +13,10 @@ import registerCourseRoutes from "./routes/courseRoute.js";
       cors: {
         origin: ["*"],
       },
+      timeout: {
+        server: 1200000, // 1 hour in milliseconds
+        socket: false, // Disable socket timeout if needed
+      },
     },
   });
 

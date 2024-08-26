@@ -18,6 +18,12 @@ export default function registerCircleRoutes(server) {
       handler: createCourse,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
+        payload: {
+          maxBytes: 10485760, // Adjust this value to increase the maximum payload size (e.g., 10MB)
+          timeout: 1200000, // Set the payload timeout (1 hour in milliseconds)
+          parse: true, // Ensures the payload is parsed
+          output: "data", // Output type, can be 'stream' for streaming data if needed
+        },
       },
     },
     {

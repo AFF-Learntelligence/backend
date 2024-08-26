@@ -15,19 +15,31 @@ import {
 } from "firebase/firestore";
 import config from "../config/config.js";
 import axios from "axios";
+import https from "https";
 
 const auth = getAuth(firebaseApp);
+
+// Create an Axios instance with updated timeout and response size settings
+const axiosInstance = axios.create({
+  httpsAgent: new https.Agent({ keepAlive: true }),
+  timeout: 1200000, // 1 hour (3600 seconds)
+  maxContentLength: Infinity, // Allow large content length
+  maxRedirects: 0, // Prevent automatic redirects if large responses cause issues
+});
 
 export const courseService = {
   // Service that creates the course and initiates the content fetching
   async createCourse(userId, courseData) {
     const courseId = await saveInitialCourseData(userId, courseData);
 
-    fetchContent(courseData)
-      .then((contentData) => saveContentToDb(courseId, contentData.content))
-      .catch((error) => {
-        console.error("Error fetching content", error);
-      });
+    console.log(`Course ${courseId} created. Starting content fetch...`);
+
+    // Use a separate function to handle the long-running process
+    handleContentFetch(courseId, courseData).catch((error) => {
+      console.error(`Error in content fetch for course ${courseId}:`, error);
+      // Update the course status to error
+      updateCourseStatus(courseId, "error").catch(console.error);
+    });
 
     return courseId;
   },
@@ -212,6 +224,29 @@ export const courseService = {
   },
 };
 
+async function handleContentFetch(courseId, courseData) {
+  try {
+    console.log(`Fetching content for course ${courseId}...`);
+    const contentData = await fetchContent(courseData);
+    console.log(`Content fetched for course ${courseId}. Saving to DB...`);
+    await saveContentToDb(courseId, contentData.content);
+    console.log(`Content saved for course ${courseId}.`);
+    // Update the course status to complete
+    await updateCourseStatus(courseId, "complete");
+  } catch (error) {
+    console.error(`Error processing content for course ${courseId}:`, error);
+    throw error;
+  }
+}
+
+async function updateCourseStatus(courseId, status) {
+  const courseRef = doc(db, "Courses", courseId);
+  await updateDoc(courseRef, {
+    onContentLoading: status === "complete" ? false : true,
+    status: status,
+  });
+}
+
 // Save the initial course data to Firestore
 async function saveInitialCourseData(userId, courseData) {
   const { name, description } = courseData;
@@ -228,16 +263,26 @@ async function saveInitialCourseData(userId, courseData) {
 
 // Fetch content for the course from the external API
 async function fetchContent(courseData) {
-  const response = await axios.post(config.createCourseAPI, {
-    courseName: courseData.name,
-    description: courseData.description,
-    content: courseData.content,
-    pdf_urls: courseData.pdfUrls,
-    youtube_urls: courseData.youtubeUrls,
-    lang: courseData.lang,
-  });
-
-  return response.data;
+  try {
+    console.log("Sending request to ML API...");
+    const response = await axiosInstance.post(config.createCourseAPI, {
+      courseName: courseData.name,
+      description: courseData.description,
+      content: courseData.content,
+      pdf_urls: courseData.pdfUrls,
+      youtube_urls: courseData.youtubeUrls,
+      lang: courseData.lang,
+    });
+    console.log("Received response from ML API");
+    return response.data;
+  } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      console.error("Request to ML API timed out");
+    } else {
+      console.error("Error from ML API:", error.message);
+    }
+    throw error;
+  }
 }
 
 // Save the fetched content to Firestore
@@ -245,11 +290,18 @@ async function saveContentToDb(courseId, content) {
   const courseRef = doc(db, "Courses", courseId);
   const contentCollectionRef = collection(courseRef, "content");
 
-  for (const chapter of content) {
-    await addOrUpdateChapter(contentCollectionRef, chapter);
+  console.log(`Saving ${content.length} chapters for course ${courseId}`);
+
+  for (let i = 0; i < content.length; i++) {
+    console.log(`Saving chapter ${i + 1} of ${content.length}`);
+    await addOrUpdateChapter(contentCollectionRef, content[i]);
   }
 
+  console.log(
+    `All chapters saved for course ${courseId}. Updating course status...`
+  );
   await updateDoc(courseRef, { onContentLoading: false });
+  console.log(`Course ${courseId} status updated to complete`);
 }
 
 // Add a chapter to the course content collection
