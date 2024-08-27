@@ -96,6 +96,7 @@ export const courseService = {
     }
 
     courseData.content = await getCourseContent(courseRef);
+    courseData.content.sort((a, b) => a.chapter - b.chapter);
 
     const { creator, ...courseWithoutCreator } = courseData;
 
@@ -400,11 +401,17 @@ async function getCourseContent(courseDocRef) {
   const contentCollectionRef = collection(courseDocRef, "content");
   const contentSnapshots = await getDocs(contentCollectionRef);
 
-  const content = [];
-  for (const chapterSnapshot of contentSnapshots.docs) {
-    const chapterData = await getChapterContent(chapterSnapshot.ref);
-    content.push(chapterData);
-  }
+  // const content = [];
+  // for (const chapterSnapshot of contentSnapshots.docs) {
+  //   const chapterData = await getChapterContent(chapterSnapshot.ref);
+  //   content.push(chapterData);
+  // }
+
+  const contentPromises = contentSnapshots.docs.map((chapterSnapshot) =>
+    getChapterContent(chapterSnapshot.ref)
+  );
+
+  const content = await Promise.all(contentPromises);
 
   return content;
 }
@@ -417,18 +424,30 @@ async function getChapterContent(chapterDocRef) {
   // Retrieve quizzes for the chapter
   const quizCollectionRef = collection(chapterDocRef, "quiz");
   const quizSnapshots = await getDocs(quizCollectionRef);
-  chapterData.quiz = [];
+  // chapterData.quiz = [];
 
-  for (const quizSnapshot of quizSnapshots.docs) {
+  // for (const quizSnapshot of quizSnapshots.docs) {
+  //   const quizData = quizSnapshot.data();
+
+  //   // Retrieve choices for the quiz
+  //   const choicesCollectionRef = collection(quizSnapshot.ref, "choices");
+  //   const choicesSnapshots = await getDocs(choicesCollectionRef);
+  //   quizData.choices = choicesSnapshots.docs.map((doc) => doc.data());
+
+  //   chapterData.quiz.push(quizData);
+  // }
+
+  const quizPromises = quizSnapshots.docs.map(async (quizSnapshot) => {
     const quizData = quizSnapshot.data();
 
-    // Retrieve choices for the quiz
     const choicesCollectionRef = collection(quizSnapshot.ref, "choices");
     const choicesSnapshots = await getDocs(choicesCollectionRef);
-    quizData.choices = choicesSnapshots.docs.map((doc) => doc.data());
 
-    chapterData.quiz.push(quizData);
-  }
+    quizData.choices = choicesSnapshots.docs.map((doc) => doc.data());
+    return quizData;
+  });
+
+  chapterData.quiz = await Promise.all(quizPromises);
 
   // Sort quizzes by question number
   chapterData.quiz.sort((a, b) => {
