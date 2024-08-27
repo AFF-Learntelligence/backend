@@ -14,11 +14,13 @@ import registerCourseRoutes from "./routes/courseRoute.js";
         origin: ["*"],
       },
       timeout: {
-        server: 1200000, // 1 hour in milliseconds
+        server: false, // 1 hour in milliseconds
         socket: false, // Disable socket timeout if needed
       },
     },
   });
+
+  server.listener.requestTimeout = 0;
 
   registerAuthRoutes(server);
   registerUserRoutes(server);

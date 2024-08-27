@@ -36,7 +36,10 @@ export const circleService = {
       userId: doc(db, "Users", userId),
     });
 
-    return invitationLink;
+    return {
+      circleId: circleId,
+      invitationLink: invitationLink,
+    };
   },
 
   async joinCircle(userId, circleId) {

@@ -42,11 +42,17 @@ export async function createCircle(request, h) {
 
     const circleData = { circleName, description };
 
+    const { circleId, invitationLink } = await circleService.createCircle(
+      uid,
+      circleData
+    );
+
     return h
       .response({
         status: 201,
         message: "Circle created successfully",
-        invitationLink: await circleService.createCircle(uid, circleData),
+        circleId: circleId,
+        invitationLink: invitationLink,
       })
       .code(201);
   } catch (error) {
