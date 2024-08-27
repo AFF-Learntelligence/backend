@@ -319,7 +319,7 @@ export async function generateChapter(request, h) {
     const { uid } = request.auth;
     await checkUserAndRole(uid, "creator");
 
-    const { title, length } = request.payload;
+    const { title, length, lang } = request.payload;
 
     if (!title || !length) {
       return h
@@ -336,7 +336,7 @@ export async function generateChapter(request, h) {
         .code(400);
     }
 
-    const chapterData = { title, length };
+    const chapterData = { title, length, lang };
     const generatedChapters = await courseService.generateChapter(chapterData);
 
     return h

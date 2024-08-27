@@ -59,12 +59,13 @@ export const courseService = {
 
   // Service that generates chapter using ML API
   async generateChapter(chapterData) {
-    const { title, length } = chapterData;
+    const { title, length, lang } = chapterData;
 
     try {
       const response = await axios.post(config.generateChapterAPI, {
         course_title: title,
         course_length: length,
+        lang: lang,
       });
 
       return response.data;
