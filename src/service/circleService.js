@@ -162,6 +162,8 @@ async function getCourses(circleRef) {
         id: courseDoc.id,
         name: courseData.name,
         description: courseData.description,
+        onContentLoading: courseData.onContentLoading,
+        published: courseData.published,
       });
     }
   }
