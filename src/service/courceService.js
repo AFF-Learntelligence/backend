@@ -104,6 +104,24 @@ export const courseService = {
     return courseWithoutCreator;
   },
 
+  async getCourseLandingPage(courseId) {
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
+
+    if (!courseSnapshot.exists()) {
+      return null;
+    }
+
+    const courseData = courseSnapshot.data();
+
+    courseData.content = await getCourseContent(courseRef);
+    courseData.content.sort((a, b) => a.chapter - b.chapter);
+
+    const { creator, ...courseWithoutCreator } = courseData;
+
+    return courseWithoutCreator;
+  },
+
   async getCourseByCreator(userId) {
     const coursesRef = collection(db, "Courses");
 

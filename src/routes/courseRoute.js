@@ -7,6 +7,7 @@ import {
   uploadPdf,
   deleteCourse,
   updateCourseById,
+  getCourseLandingPage,
 } from "../controller/courseController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -36,6 +37,14 @@ export default function registerCircleRoutes(server) {
       handler: getCourseById,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/courses/landingpage/{courseId}",
+      method: "GET",
+      handler: getCourseLandingPage,
+      options: {
+        auth: false, // No authentication required
       },
     },
     {

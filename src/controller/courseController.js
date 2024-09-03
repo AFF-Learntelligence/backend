@@ -89,11 +89,19 @@ export async function getCourseById(request, h) {
     const { courseId } = request.params;
     const { circleId } = request.query;
 
-    const courseData = await courseService.getCourseById(
-      uid,
-      courseId,
-      circleId
-    );
+    let courseData;
+
+    if (
+      courseId === "7YVcqeCGv4zPxPhIcKtn" ||
+      courseId === "L7oGR8cOj4ERuuoac7cj" ||
+      courseId === "VFTVJ4Bekgm8HUNGkl2h" ||
+      courseId === "8L5xAqTyMsLz6GDdu4Ka" ||
+      courseId === "EfJZvYbUUwLVSR1P7kgK"
+    ) {
+      courseData = await courseService.getCourseLandingPage(courseId);
+    } else {
+      courseData = await courseService.getCourseById(uid, courseId, circleId);
+    }
 
     if (courseData === null) {
       return h
@@ -118,6 +126,60 @@ export async function getCourseById(request, h) {
         message: error.message,
       })
       .code(statusCode);
+  }
+}
+
+// Handler for getting a course by ID in Landing Page
+export async function getCourseLandingPage(request, h) {
+  try {
+    const { courseId } = request.params;
+
+    // List of course IDs that don't require authentication
+    const openAccessCourses = [
+      "7YVcqeCGv4zPxPhIcKtn",
+      "L7oGR8cOj4ERuuoac7cj",
+      "VFTVJ4Bekgm8HUNGkl2h",
+      "8L5xAqTyMsLz6GDdu4Ka",
+      "EfJZvYbUUwLVSR1P7kgK",
+    ];
+
+    // Check if the courseId is in the list of open access courses
+    if (openAccessCourses.includes(courseId)) {
+      const courseData = await courseService.getCourseLandingPage(courseId);
+
+      if (!courseData) {
+        return h
+          .response({
+            status: 404,
+            message: "Course not found",
+          })
+          .code(404);
+      }
+
+      return h
+        .response({
+          status: 200,
+          message: "Course data retrieved successfully.",
+          data: courseData,
+        })
+        .code(200);
+    } else {
+      // If courseId is not in the open access list, return a 403 Forbidden error
+      return h
+        .response({
+          status: 403,
+          message: "Unauthorized access.",
+        })
+        .code(403);
+    }
+  } catch (error) {
+    console.error(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while retrieving the course.",
+      })
+      .code(500);
   }
 }
 
