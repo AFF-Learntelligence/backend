@@ -3,6 +3,7 @@ import {
   getCircleDetails,
   joinCircle,
   getAllUserCircle,
+  getUnpublishedCircles,
 } from "../controller/circleController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -36,6 +37,14 @@ export default function registerCircleRoutes(server) {
       path: "/api/circles",
       method: "GET",
       handler: getAllUserCircle,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/circles/unpublished/{courseId}",
+      method: "GET",
+      handler: getUnpublishedCircles,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

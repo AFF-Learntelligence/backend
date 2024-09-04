@@ -183,3 +183,27 @@ export async function getAllUserCircle(request, h) {
       .code(500);
   }
 }
+
+export async function getUnpublishedCircles(request, h) {
+  try {
+    const { uid } = request.auth;
+    const { courseId } = request.params;
+    const data = await circleService.getUnpublishedCircles(uid, courseId);
+
+    return h
+      .response({
+        status: 200,
+        message: "Circles retrieved successfully.",
+        data,
+      })
+      .code(200);
+  } catch (error) {
+    console.log(error.message);
+    return h
+      .response({
+        status: 500,
+        message: "An error occurred while retrieving circles.",
+      })
+      .code(500);
+  }
+}

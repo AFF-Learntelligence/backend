@@ -11,6 +11,7 @@ import {
   setDoc,
   addDoc,
   query,
+  where,
 } from "firebase/firestore";
 
 const auth = getAuth(firebaseApp);
@@ -119,6 +120,39 @@ export const circleService = {
       }
     }
     return circles;
+  },
+
+  // Function to get circles where the course hasn't been shared yet
+  async getUnpublishedCircles(userId, courseId) {
+    const circlesRef = collection(db, "Circles");
+    const circlesSnapshot = await getDocs(circlesRef);
+
+    const unpublishedCircles = [];
+
+    for (const circleDoc of circlesSnapshot.docs) {
+      const circleData = circleDoc.data();
+      const circleId = circleDoc.id;
+
+      // Check if the user is a member of this circle
+      const membersRef = collection(circleDoc.ref, "Members");
+      const memberDocRef = doc(membersRef, userId);
+      const memberSnapshot = await getDoc(memberDocRef);
+
+      if (memberSnapshot.exists()) {
+        // Check if the course has been shared in this circle
+        const courseRef = doc(db, `Circles/${circleId}/Courses`, courseId);
+        const courseSnapshot = await getDoc(courseRef);
+
+        if (!courseSnapshot.exists()) {
+          unpublishedCircles.push({
+            circleId,
+            circleName: circleData.circleName,
+          });
+        }
+      }
+    }
+
+    return unpublishedCircles;
   },
 };
 
