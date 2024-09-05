@@ -514,14 +514,11 @@ async function getChapterContent(chapterDocRef) {
 
   // Sort quizzes by question number
   chapterData.quiz.sort((a, b) => {
-    const questionNumberA = parseInt(
-      a.question.match(/Question (\d+):/)[1],
-      10
-    );
-    const questionNumberB = parseInt(
-      b.question.match(/Question (\d+):/)[1],
-      10
-    );
+    const regex = /(?:Question|Pertanyaan) (\d+):/;
+
+    const questionNumberA = parseInt(a.question.match(regex)?.[1], 10);
+    const questionNumberB = parseInt(b.question.match(regex)?.[1], 10);
+
     return questionNumberA - questionNumberB;
   });
 
