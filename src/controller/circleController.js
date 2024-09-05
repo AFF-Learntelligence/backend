@@ -188,13 +188,16 @@ export async function getUnpublishedCircles(request, h) {
   try {
     const { uid } = request.auth;
     const { courseId } = request.params;
-    const data = await circleService.getUnpublishedCircles(uid, courseId);
+    const { courseName, courseDescription, unpublishedCircles } =
+      await circleService.getUnpublishedCircles(uid, courseId);
 
     return h
       .response({
         status: 200,
         message: "Circles retrieved successfully.",
-        data,
+        courseName,
+        courseDescription,
+        unpublishedCircles,
       })
       .code(200);
   } catch (error) {

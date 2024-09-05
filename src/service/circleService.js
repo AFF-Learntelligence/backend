@@ -152,7 +152,22 @@ export const circleService = {
       }
     }
 
-    return unpublishedCircles;
+    // Fetch the course data
+    const courseDataRef = doc(db, "Courses", courseId);
+    const courseDataSnapshot = await getDoc(courseDataRef);
+
+    if (!courseDataSnapshot.exists()) {
+      throw new Error("Course not found");
+    }
+
+    const courseData = courseDataSnapshot.data();
+
+    // Return course name, description, and the unpublished circles as an object
+    return {
+      courseName: courseData.name,
+      courseDescription: courseData.description,
+      unpublishedCircles,
+    };
   },
 };
 
