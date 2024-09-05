@@ -242,6 +242,29 @@ export const courseService = {
       return "course_circle_deleted";
     }
   },
+
+  async getCourseByIdLandingPage(userId, courseId) {
+    const circlesRef = collection(db, "Circles");
+    const circlesSnapshot = await getDocs(circlesRef);
+
+    for (const circleDoc of circlesSnapshot.docs) {
+      const circleId = circleDoc.id;
+
+      const membersRef = collection(circleDoc.ref, "Members");
+      const memberDocRef = doc(membersRef, userId);
+      const memberSnapshot = await getDoc(memberDocRef);
+
+      if (memberSnapshot.exists()) {
+        const courseRef = doc(db, `Circles/${circleId}/Courses`, courseId);
+        const courseSnapshot = await getDoc(courseRef);
+
+        if (courseSnapshot.exists()) {
+          return this.getCourseLandingPage(courseId);
+        }
+      }
+    }
+    throw new Error("Unauthorized.");
+  },
 };
 
 async function handleContentFetch(courseId, courseData) {

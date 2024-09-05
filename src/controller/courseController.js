@@ -89,19 +89,11 @@ export async function getCourseById(request, h) {
     const { courseId } = request.params;
     const { circleId } = request.query;
 
-    let courseData;
-
-    if (
-      courseId === "7YVcqeCGv4zPxPhIcKtn" ||
-      courseId === "L7oGR8cOj4ERuuoac7cj" ||
-      courseId === "VFTVJ4Bekgm8HUNGkl2h" ||
-      courseId === "8L5xAqTyMsLz6GDdu4Ka" ||
-      courseId === "EfJZvYbUUwLVSR1P7kgK"
-    ) {
-      courseData = await courseService.getCourseLandingPage(courseId);
-    } else {
-      courseData = await courseService.getCourseById(uid, courseId, circleId);
-    }
+    const courseData = await courseService.getCourseById(
+      uid,
+      courseId,
+      circleId
+    );
 
     if (courseData === null) {
       return h
@@ -180,6 +172,43 @@ export async function getCourseLandingPage(request, h) {
         message: "An error occurred while retrieving the course.",
       })
       .code(500);
+  }
+}
+
+// Handler for getting a course by ID
+export async function getCourseCreatorLandingPage(request, h) {
+  try {
+    const { uid } = request.auth;
+    const { courseId } = request.params;
+
+    const courseData = await courseService.getCourseByIdLandingPage(
+      uid,
+      courseId
+    );
+
+    if (courseData === null) {
+      return h
+        .response({
+          status: 404,
+          message: "Course not found",
+        })
+        .code(404);
+    }
+
+    return h.response({
+      status: 200,
+      message: "Course data retrieved successfully.",
+      data: courseData,
+    });
+  } catch (error) {
+    console.error(error.message);
+    const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
+    return h
+      .response({
+        status: statusCode,
+        message: error.message,
+      })
+      .code(statusCode);
   }
 }
 
