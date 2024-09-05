@@ -263,7 +263,28 @@ export const courseService = {
         }
       }
     }
-    throw new Error("Unauthorized.");
+
+    const courseRef = doc(db, "Courses", courseId);
+    const courseSnapshot = await getDoc(courseRef);
+
+    if (!courseSnapshot.exists()) {
+      return null;
+    }
+
+    const courseData = courseSnapshot.data();
+
+    if (courseData.creator.id !== userId) {
+      throw new Error(
+        "Unauthorized. Only the course creator can access this course."
+      );
+    }
+
+    courseData.content = await getCourseContent(courseRef);
+    courseData.content.sort((a, b) => a.chapter - b.chapter);
+
+    const { creator, ...courseWithoutCreator } = courseData;
+
+    return courseWithoutCreator;
   },
 };
 
