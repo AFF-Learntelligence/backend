@@ -9,6 +9,7 @@ import {
   updateCourseById,
   getCourseLandingPage,
   getCourseCreatorLandingPage,
+  getContentLoadingStatus,
 } from "../controller/courseController.js";
 import { validateFirebaseIdToken } from "../middleware/authMiddleware.js";
 
@@ -92,6 +93,14 @@ export default function registerCircleRoutes(server) {
       path: "/api/chapters/generate",
       method: "POST",
       handler: generateChapter,
+      options: {
+        pre: [{ method: validateFirebaseIdToken }],
+      },
+    },
+    {
+      path: "/api/courses/content-loading-status",
+      method: "GET",
+      handler: getContentLoadingStatus,
       options: {
         pre: [{ method: validateFirebaseIdToken }],
       },

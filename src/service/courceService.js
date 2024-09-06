@@ -286,6 +286,24 @@ export const courseService = {
 
     return courseWithoutCreator;
   },
+
+  async checkContentLoadingStatus() {
+    const coursesRef = collection(db, "Courses");
+    const coursesSnapshot = await getDocs(coursesRef);
+
+    let isGenerating = false;
+
+    for (const courseDoc of coursesSnapshot.docs) {
+      const courseData = courseDoc.data();
+
+      if (courseData.onContentLoading === true) {
+        isGenerating = true;
+        break;
+      }
+    }
+
+    return { generating: isGenerating };
+  },
 };
 
 async function handleContentFetch(courseId, courseData) {

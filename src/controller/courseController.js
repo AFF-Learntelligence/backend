@@ -479,3 +479,15 @@ export async function uploadPdf(request, h) {
       .code(500);
   }
 }
+
+export async function getContentLoadingStatus(req, h) {
+  try {
+    const generating = await courseService.checkContentLoadingStatus();
+    return h.response({ status: 200, data: generating }).code(200);
+  } catch (error) {
+    console.error("Error checking content loading status:", error);
+    return h
+      .response({ error: "Failed to check content loading status" })
+      .code(500);
+  }
+}
