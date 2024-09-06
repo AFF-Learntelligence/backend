@@ -220,20 +220,13 @@ export async function getCourseByCreator(request, h) {
 
     const courses = await courseService.getCourseByCreator(uid);
 
-    if (courses.length === 0) {
-      return h
-        .response({
-          status: 200,
-          message: "No courses found for this creator",
-        })
-        .code(200);
-    }
-
-    return h.response({
-      status: 200,
-      message: "Courses retrieved successfully.",
-      data: courses,
-    });
+    return h
+      .response({
+        status: 200,
+        message: "Courses retrieved successfully.",
+        data: courses,
+      })
+      .code(200);
   } catch (error) {
     console.error(error.message);
     const statusCode = error.message.includes("Unauthorized") ? 403 : 500;
