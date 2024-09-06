@@ -133,6 +133,7 @@ export async function getCourseLandingPage(request, h) {
       "VFTVJ4Bekgm8HUNGkl2h",
       "8L5xAqTyMsLz6GDdu4Ka",
       "EfJZvYbUUwLVSR1P7kgK",
+      "ZMfNGh8oOQWEL0LpeLbt",
     ];
 
     // Check if the courseId is in the list of open access courses
